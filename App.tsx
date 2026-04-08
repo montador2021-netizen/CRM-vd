@@ -950,7 +950,7 @@ const App: React.FC = () => {
                 {selectedSale.servicosExtras.length > 0 && (
                   <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
                     <span className="text-[8px] font-black text-gray-400 uppercase block mb-3">Serviços Extras</span>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {selectedSale.servicosExtras.map((serv, idx) => (
                         <span key={idx} className="px-3 py-1 bg-purple-50 border border-purple-100 rounded-lg text-[9px] font-black text-purple-600 uppercase">
                           {serv}

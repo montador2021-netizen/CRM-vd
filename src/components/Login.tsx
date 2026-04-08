@@ -13,8 +13,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@crm.vcquantum.com`;
 
     try {
@@ -32,7 +35,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       onLogin();
     } catch (error) {
       console.error("Erro na autenticação:", error);
-      alert("Erro ao entrar. Verifique os dados.");
+      setError("Não foi possível acessar. Verifique seu nome e senha.");
     }
   };
 
@@ -40,6 +43,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="flex flex-col items-center justify-center h-screen p-6 bg-gray-50">
       <h1 className="text-3xl font-black text-gray-900 mb-8 uppercase italic">V&C Quantum CRM</h1>
       <form onSubmit={handleAuth} className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-lg border border-gray-100 space-y-4">
+        {error && <p className="text-red-500 text-sm text-center font-bold">{error}</p>}
         <input type="text" placeholder="Primeiro Nome" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full p-4 rounded-xl border border-gray-200" required />
         <input type="text" placeholder="Segundo Nome" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full p-4 rounded-xl border border-gray-200" required />
         <input type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-4 rounded-xl border border-gray-200" required />
