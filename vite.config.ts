@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
           }
         })
       ],
-      base: process.env.NODE_ENV === 'production' ? '/vendas-v2/' : '/',
+      base: '/',
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
