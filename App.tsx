@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import SaleForm from './components/SaleForm';
 import Settings from './components/Settings';
 import Customers from './components/Customers';
+import InstallPrompt from './components/InstallPrompt';
 import { NavItem, Sale, Targets, WeeklyPerformance, DashboardStats, Customer } from './tipos';
 import { PIPELINE_STAGES, MOCK_OPPORTUNITIES } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
@@ -838,6 +839,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-row selection:bg-purple-500/30 overflow-hidden font-sans">
+      <InstallPrompt />
       <Sidebar 
         isCollapsed={isSidebarCollapsed} 
         setIsCollapsed={setIsSidebarCollapsed} 
