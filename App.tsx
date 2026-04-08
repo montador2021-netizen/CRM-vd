@@ -1,8 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { auth } from './src/lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { Login } from './src/components/Login';
+import { Login, User } from './src/components/Login';
 import Sidebar from './components/Sidebar';
 import SaleForm from './components/SaleForm';
 import Settings from './components/Settings';
@@ -26,13 +24,6 @@ import {
   WifiOff,
   BarChart
 } from 'lucide-react';
-
-// --- CONFIGURAÇÃO FIREBASE (Coloque seus dados aqui se tiver) ---
-// import { initializeApp } from 'firebase/app';
-// import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
-// const firebaseConfig = { ... };
-// const app = initializeApp(firebaseConfig);
-// const db = getFirestore(app);
 
 import { 
   BarChart as RechartsBarChart, 
@@ -75,13 +66,14 @@ const App: React.FC = () => {
   const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const isAdmin = user?.firstName === 'Valmir' && user?.lastName === 'Melo';
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return unsubscribe;
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      setUser(JSON.parse(currentUser));
+    }
+    setLoading(false);
   }, []);
   
   // Monitorar conexão e PWA
@@ -125,6 +117,11 @@ const App: React.FC = () => {
       try { setCustomers(JSON.parse(rawCustomers)); } catch (e) {}
     }
   }, []);
+
+  const filteredSales = useMemo(() => {
+    if (isAdmin) return savedSales;
+    return savedSales.filter(sale => sale.vendedorId === user?.id);
+  }, [savedSales, isAdmin, user]);
 
   const saveTargets = (newTargets: Targets) => {
     setTargets(newTargets);
@@ -830,7 +827,7 @@ const App: React.FC = () => {
 
         <div className="space-y-3">
            <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-2">Últimas Atividades</h3>
-           {savedSales.slice(0, 5).map((sale, i) => (
+           {filteredSales.slice(0, 5).map((sale, i) => (
              <div key={i} className="bg-white p-5 rounded-2xl border border-gray-200 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                 <button 
                   onClick={() => setSelectedSale(sale)}
@@ -851,7 +848,7 @@ const App: React.FC = () => {
   };
 
   if (loading) return <div className="h-screen flex items-center justify-center">Carregando...</div>;
-  if (!user) return <Login onLogin={() => {}} />;
+  if (!user) return <Login onLogin={(user) => setUser(user)} />;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-row selection:bg-purple-500/30 overflow-hidden font-sans">
