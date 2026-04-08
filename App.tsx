@@ -1,5 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { auth } from './src/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { Login } from './src/components/Login';
 import Sidebar from './components/Sidebar';
 import SaleForm from './components/SaleForm';
 import Settings from './components/Settings';
@@ -70,6 +73,16 @@ const App: React.FC = () => {
   const [targets, setTargets] = useState<Targets>(DEFAULT_TARGETS);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
   
   // Monitorar conexão e PWA
   useEffect(() => {
@@ -244,7 +257,7 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (activeNav === NavItem.Portal) {
+    if (activeNav === NavItem.Resumos) {
       return (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -836,6 +849,9 @@ const App: React.FC = () => {
       </motion.div>
     );
   };
+
+  if (loading) return <div className="h-screen flex items-center justify-center">Carregando...</div>;
+  if (!user) return <Login onLogin={() => {}} />;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-row selection:bg-purple-500/30 overflow-hidden font-sans">
