@@ -1,0 +1,7 @@
+{
+  "name": "Remix: CRM V\u0026C Quantum",
+  "description": "Ecossistema de Gestão e Performance Conquista, incluindo o CRM V\u0026C Quantum Hub.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

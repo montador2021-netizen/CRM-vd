@@ -1,0 +1,21 @@
+
+{
+  "short_name": "V&C Quantum",
+  "name": "V&C Quantum Hub",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/vc/192/192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://picsum.photos/seed/vc/512/512",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#05020a",
+  "background_color": "#05020a"
+}

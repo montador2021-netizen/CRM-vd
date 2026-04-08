@@ -1,0 +1,119 @@
+/**
+ * Representa uma venda/pedido realizado no sistema.
+ */
+export interface Sale {
+  numeroPedido: string;
+  clienteId?: string; // ID do cliente vinculado
+  valorProduto: number;
+  valorAssistencia: number;
+  valorImpermeabilizacao: number;
+  total: number;
+  data: string; // Formato DD/MM/AAAA
+  timestamp: number;
+  bonusTotal: number; // Soma de comissões + bônus fixos
+  comissaoProduto: number; // Base 2.2%
+  servicosExtras: string[]; // Lista de nomes dos bônus fixos (ex: ["Montagem", "Lavagem"])
+}
+
+/**
+ * Configuração de um nível do acelerador de metas.
+ */
+export interface LevelConfig {
+  threshold: number; // Porcentagem mínima para atingir o nível (ex: 100)
+  rate: number;      // Taxa de bônus aplicada (ex: 0.6)
+}
+
+/**
+ * Configurações globais de metas e aceleradores.
+ */
+export interface Targets {
+  product: number;
+  assistance: number;
+  waterproofing: number;
+  levels: {
+    1: LevelConfig;
+    2: LevelConfig;
+    3: LevelConfig;
+  };
+}
+
+/**
+ * Dados para o gráfico de performance semanal.
+ */
+export interface WeeklyPerformance {
+  day: string;
+  vendas: number;
+  comissao: number;
+}
+
+/**
+ * Estatísticas consolidadas para o Dashboard.
+ */
+export interface DashboardStats {
+  pTotal: number;
+  aTotal: number;
+  iTotal: number;
+  pPerc: number;
+  aPerc: number;
+  iPerc: number;
+  level: number;
+  comissaoProdutos: number;
+  comissaoAssistencia: number;
+  bonusServicos: number;
+  bonusAcelerador: number;
+  ganhosTotais: number;
+  faturamentoGeral: number;
+}
+
+/**
+ * Itens de navegação do sistema.
+ */
+export enum NavItem {
+  Resumos = 'Resumos',
+  Relatorios = 'Relatórios',
+  Meta = 'Meta',
+  ResumoServico = 'Resumo serviço',
+  ResumoPedido = 'Resumo pedido',
+  AdicionarVenda = 'Adicionar vendas',
+  Configuracoes = 'Configurações',
+  Clientes = 'Clientes',
+  Processos = 'Processos'
+}
+
+/**
+ * Representa um cliente no sistema.
+ */
+export interface Customer {
+  id: string;
+  nome: string;
+  email?: string;
+  telefone?: string;
+  cpf?: string;
+  endereco?: string;
+  dataCadastro: string;
+  totalComprado: number;
+  pedidosCount: number;
+}
+
+/**
+ * Tipos legados/CRM (Mantidos para compatibilidade com constantes se necessário)
+ */
+export interface PipelineStage {
+  id: string;
+  label: string;
+  color: string;
+}
+
+export interface Opportunity {
+  id: string;
+  title: string;
+  type: string;
+  value: number;
+  daysAgo: number;
+  stage: string;
+  user: {
+    name: string;
+    avatar: string;
+  };
+  tags: string[];
+}
