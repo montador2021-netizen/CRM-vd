@@ -9,6 +9,9 @@ import InstallPrompt from './components/InstallPrompt';
 import { NavItem, Sale, Targets, WeeklyPerformance, DashboardStats, Customer } from './tipos';
 import { PIPELINE_STAGES, MOCK_OPPORTUNITIES } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
+import { db, auth } from './src/firebase';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { 
   Plus, 
   Wrench, 
@@ -69,11 +72,31 @@ const App: React.FC = () => {
   const isAdmin = user?.firstName === 'Valmir' && user?.lastName === 'Melo';
   
   useEffect(() => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      setUser(JSON.parse(currentUser));
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Se o usuário estiver autenticado, restauramos o estado do usuário
+        // Como agora é anônimo, podemos manter o nome se ele estiver no localStorage
+        // ou apenas definir um usuário padrão.
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        } else {
+          // Fallback para usuário anônimo se não houver nada no localStorage
+          setUser({
+            id: firebaseUser.uid,
+            firstName: 'Visitante',
+            lastName: '',
+            store: 'Geral',
+            password: '',
+            role: 'vendedor'
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
   
   // Monitorar conexão e PWA
@@ -92,30 +115,28 @@ const App: React.FC = () => {
       setDeferredPrompt(null);
     });
     
-    // Carregar dados locais inicialmente
-    const rawData = localStorage.getItem(STORAGE_KEY);
-    if (rawData) {
-      try { 
-        const parsed = JSON.parse(rawData);
-        if (Array.isArray(parsed)) {
-          setSavedSales(parsed); 
-        } else {
-          setSavedSales([]);
-        }
-      } catch (e) {
-        setSavedSales([]);
+    // Carregar dados do Firestore
+    const unsubscribeSales = onSnapshot(collection(db, 'sales'), (snapshot) => {
+      const salesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Sale));
+      setSavedSales(salesData);
+    });
+
+    const unsubscribeTargets = onSnapshot(doc(db, 'settings', 'targets'), (doc) => {
+      if (doc.exists()) {
+        setTargets(doc.data() as Targets);
       }
-    }
+    });
 
-    const rawTargets = localStorage.getItem(TARGETS_KEY);
-    if (rawTargets) {
-      try { setTargets(JSON.parse(rawTargets)); } catch (e) {}
-    }
+    const unsubscribeCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => {
+      const customersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Customer));
+      setCustomers(customersData);
+    });
 
-    const rawCustomers = localStorage.getItem(CUSTOMERS_KEY);
-    if (rawCustomers) {
-      try { setCustomers(JSON.parse(rawCustomers)); } catch (e) {}
-    }
+    return () => {
+      unsubscribeSales();
+      unsubscribeTargets();
+      unsubscribeCustomers();
+    };
   }, []);
 
   const filteredSales = useMemo(() => {
@@ -123,9 +144,9 @@ const App: React.FC = () => {
     return savedSales.filter(sale => sale.vendedorId === user?.id);
   }, [savedSales, isAdmin, user]);
 
-  const saveTargets = (newTargets: Targets) => {
+  const saveTargets = async (newTargets: Targets) => {
+    await setDoc(doc(db, 'settings', 'targets'), newTargets);
     setTargets(newTargets);
-    localStorage.setItem(TARGETS_KEY, JSON.stringify(newTargets));
     setActiveNav(NavItem.Resumos);
   };
 
@@ -143,6 +164,7 @@ const App: React.FC = () => {
   const saveSale = async (newSaleData: any) => {
     const saleObj: Sale = {
       numeroPedido: newSaleData.pedido,
+      vendedorId: user?.id || 'unknown',
       clienteId: newSaleData.clienteId,
       valorProduto: newSaleData.produto,
       valorAssistencia: newSaleData.assistencia,
@@ -155,29 +177,20 @@ const App: React.FC = () => {
       timestamp: Date.now()
     };
 
-    const newSales = [saleObj, ...savedSales];
-    setSavedSales(newSales);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSales));
+    await addDoc(collection(db, 'sales'), saleObj);
 
     // Atualizar estatísticas do cliente se vinculado
     if (newSaleData.clienteId) {
-      const updatedCustomers = customers.map(c => {
-        if (c.id === newSaleData.clienteId) {
-          return {
-            ...c,
-            totalComprado: c.totalComprado + newSaleData.total,
-            pedidosCount: c.pedidosCount + 1
-          };
-        }
-        return c;
-      });
-      setCustomers(updatedCustomers);
-      localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(updatedCustomers));
+      const customerRef = doc(db, 'customers', newSaleData.clienteId);
+      const customer = customers.find(c => c.id === newSaleData.clienteId);
+      if (customer) {
+        await updateDoc(customerRef, {
+          totalComprado: (customer.totalComprado || 0) + newSaleData.total,
+          pedidosCount: (customer.pedidosCount || 0) + 1
+        });
+      }
     }
-
-    // AQUI você salvaria no Firebase se estiver online
-    // if (isOnline) { await addDoc(collection(db, "vendas"), saleObj); }
-
+    
     setActiveNav(NavItem.ResumoPedido);
   };
 
@@ -228,29 +241,23 @@ const App: React.FC = () => {
     };
   }, [savedSales, targets]);
 
-  const addCustomer = (data: Omit<Customer, 'id' | 'dataCadastro' | 'totalComprado' | 'pedidosCount'>) => {
-    const newCustomer: Customer = {
+  const addCustomer = async (data: Omit<Customer, 'id' | 'dataCadastro' | 'totalComprado' | 'pedidosCount'>) => {
+    const newCustomer: Omit<Customer, 'id'> = {
       ...data,
-      id: Math.random().toString(36).substr(2, 9),
       dataCadastro: new Date().toLocaleDateString('pt-BR'),
       totalComprado: 0,
       pedidosCount: 0
     };
-    const newCustomers = [newCustomer, ...customers];
-    setCustomers(newCustomers);
-    localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(newCustomers));
+    await addDoc(collection(db, 'customers'), newCustomer);
   };
 
-  const deleteCustomer = (id: string) => {
-    const newCustomers = customers.filter(c => c.id !== id);
-    setCustomers(newCustomers);
-    localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(newCustomers));
+  const deleteCustomer = async (id: string) => {
+    await deleteDoc(doc(db, 'customers', id));
   };
 
-  const updateCustomer = (updated: Customer) => {
-    const newCustomers = customers.map(c => c.id === updated.id ? updated : c);
-    setCustomers(newCustomers);
-    localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(newCustomers));
+  const updateCustomer = async (updated: Customer) => {
+    const { id, ...data } = updated;
+    await updateDoc(doc(db, 'customers', id), data);
   };
 
   const renderContent = () => {

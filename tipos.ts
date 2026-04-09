@@ -2,7 +2,9 @@
  * Representa uma venda/pedido realizado no sistema.
  */
 export interface Sale {
+  id?: string;
   numeroPedido: string;
+  vendedorId?: string; // ID do vendedor
   clienteId?: string; // ID do cliente vinculado
   valorProduto: number;
   valorAssistencia: number;

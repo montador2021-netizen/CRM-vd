@@ -10,12 +10,52 @@
         "role": { "type": "string", "enum": ["admin", "vendedor"], "description": "Role of the user" }
       },
       "required": ["name", "email", "role"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Sales record",
+      "type": "object",
+      "properties": {
+        "numeroPedido": { "type": "string" },
+        "vendedorId": { "type": "string" },
+        "clienteId": { "type": "string" },
+        "valorProduto": { "type": "number" },
+        "valorAssistencia": { "type": "number" },
+        "valorImpermeabilizacao": { "type": "number" },
+        "total": { "type": "number" },
+        "data": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "bonusTotal": { "type": "number" },
+        "comissaoProduto": { "type": "number" },
+        "servicosExtras": { "type": "array" }
+      },
+      "required": ["numeroPedido", "vendedorId", "valorProduto", "total", "data", "timestamp", "bonusTotal", "comissaoProduto"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer information",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "email": { "type": "string" },
+        "telefone": { "type": "string" },
+        "dataCadastro": { "type": "string" }
+      },
+      "required": ["nome", "dataCadastro"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles"
+    },
+    "/sales/{saleId}": {
+      "schema": "Sale",
+      "description": "Sales records"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customers"
     }
   }
 }
