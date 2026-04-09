@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, X, Terminal, CheckSquare, Square, Percent, User } from 'lucide-react';
-import { Sale, Customer } from '../tipos';
+import { Sale, Customer, Targets } from '../tipos';
 
 interface SaleFormProps {
   onCancel: () => void;
   onSubmit: (sale: Partial<Sale> & { pedido: string, produto: number, assistencia: number, impermeabilizacao: number, clienteId?: string }) => void;
   customers: Customer[];
+  targets: Targets;
 }
 
 const BONUS_VALUES = {
@@ -17,7 +18,7 @@ const BONUS_VALUES = {
   impermeabilizacao_bonus: 40
 };
 
-const SaleForm: React.FC<SaleFormProps> = ({ onCancel, onSubmit, customers }) => {
+const SaleForm: React.FC<SaleFormProps> = ({ onCancel, onSubmit, customers, targets }) => {
   const [pedido, setPedido] = useState('');
   const [clienteId, setClienteId] = useState('');
   const [produto, setProduto] = useState<number>(0);
@@ -56,7 +57,7 @@ const SaleForm: React.FC<SaleFormProps> = ({ onCancel, onSubmit, customers }) =>
   };
 
   const comissaoProdutoBase = produto * 0.022; 
-  const comissaoAssistenciaBase = assistencia * 0.05; // 5% base no formulário individual
+  const comissaoAssistenciaBase = assistencia * ( (produto / (targets.product || 1)) >= 1 ? 0.10 : 0.05 );
 
   const getSelectedLabels = () => {
     const labels: string[] = [];

@@ -435,7 +435,7 @@ const App: React.FC = () => {
       );
     }
 
-    if (activeNav === NavItem.AdicionarVenda) return <SaleForm onCancel={() => setActiveNav(NavItem.Resumos)} onSubmit={saveSale} customers={customers} />;
+    if (activeNav === NavItem.AdicionarVenda) return <SaleForm onCancel={() => setActiveNav(NavItem.Resumos)} onSubmit={saveSale} customers={customers} targets={targets} />;
     if (activeNav === NavItem.Clientes) return (
       <Customers 
         customers={customers} 
