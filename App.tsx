@@ -215,11 +215,14 @@ const App: React.FC = () => {
       data: new Date().toLocaleDateString('pt-BR'),
       timestamp: Date.now()
     };
+    console.log("Created saleObj:", saleObj);
 
     // 1. Salvar localmente imediatamente
     const updatedSales = [saleObj, ...savedSales];
+    console.log("Updating savedSales state with:", updatedSales);
     setSavedSales(updatedSales);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
+    console.log("Saved to localStorage");
 
     // 2. Tentar sincronizar se online
     if (isOnline) {

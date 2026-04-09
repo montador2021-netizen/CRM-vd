@@ -122,12 +122,12 @@ const SaleForm: React.FC<SaleFormProps> = ({ onCancel, onSubmit, customers, targ
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">ID Pedido</label>
                 <input
                   ref={firstInputRef}
-                  type="text"
+                  type="number"
+                  inputMode="numeric"
                   required
-                  autoCapitalize="characters"
                   value={pedido}
-                  onChange={(e) => setPedido(e.target.value.toUpperCase())}
-                  placeholder="EX: VC1234"
+                  onChange={(e) => setPedido(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="EX: 1234"
                   className="w-full bg-gray-50 border border-gray-200 p-5 rounded-2xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-800 font-bold text-lg outline-none"
                 />
               </div>
