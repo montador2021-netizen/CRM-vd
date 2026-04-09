@@ -73,30 +73,36 @@ const App: React.FC = () => {
   const isAdmin = user?.firstName === 'Valmir' && user?.lastName === 'Melo';
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        // Se o usuário estiver autenticado, restauramos o estado do usuário
-        // Como agora é anônimo, podemos manter o nome se ele estiver no localStorage
-        // ou apenas definir um usuário padrão.
-        const storedUser = localStorage.getItem('currentUser');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        } else {
-          // Fallback para usuário anônimo se não houver nada no localStorage
-          setUser({
-            id: firebaseUser.uid,
-            firstName: 'Visitante',
-            lastName: '',
-            store: 'Geral',
-            password: '',
-            role: 'vendedor'
-          });
-        }
-      } else {
-        setUser(null);
-      }
+    let unsubscribe = () => {};
+    // Check localStorage first
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
       setLoading(false);
-    });
+    } else {
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          // Se o usuário estiver autenticado, restauramos o estado do usuário
+          const storedUser = localStorage.getItem('currentUser');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            // Fallback para usuário autenticado se não houver nada no localStorage
+            setUser({
+              id: firebaseUser.uid,
+              firstName: firebaseUser.displayName || 'Usuário',
+              lastName: '',
+              store: 'Geral',
+              password: '',
+              role: (firebaseUser.email === 'montador2021@gmail.com') ? 'admin' : 'vendedor'
+            });
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+    }
     return () => unsubscribe();
   }, []);
   
