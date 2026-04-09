@@ -102,7 +102,36 @@ const App: React.FC = () => {
   
   // Monitorar conexão e PWA
   useEffect(() => {
-    window.addEventListener('online', () => setIsOnline(true));
+    const handleOnline = async () => {
+      setIsOnline(true);
+      // Sincronizar vendas pendentes
+      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
+      if (pending.length > 0) {
+        for (const sale of pending) {
+          try {
+            await addDoc(collection(db, 'sales'), sale);
+            // Atualizar estatísticas do cliente se vinculado
+            if (sale.clienteId) {
+              const customerRef = doc(db, 'customers', sale.clienteId);
+              const customer = customers.find(c => c.id === sale.clienteId);
+              if (customer) {
+                await updateDoc(customerRef, {
+                  totalComprado: (customer.totalComprado || 0) + sale.total,
+                  pedidosCount: (customer.pedidosCount || 0) + 1
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Erro ao sincronizar venda pendente:", error);
+            // Se falhar, manter na fila (ou tratar de outra forma)
+            continue;
+          }
+        }
+        localStorage.removeItem('pending_sales');
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
     window.addEventListener('offline', () => setIsOnline(false));
 
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -134,11 +163,13 @@ const App: React.FC = () => {
     });
 
     return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', () => setIsOnline(false));
       unsubscribeSales();
       unsubscribeTargets();
       unsubscribeCustomers();
     };
-  }, []);
+  }, [customers]);
 
   const filteredSales = useMemo(() => {
     if (isAdmin) return savedSales;
@@ -178,18 +209,36 @@ const App: React.FC = () => {
       timestamp: Date.now()
     };
 
-    await addDoc(collection(db, 'sales'), saleObj);
+    // 1. Salvar localmente imediatamente
+    const updatedSales = [saleObj, ...savedSales];
+    setSavedSales(updatedSales);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
 
-    // Atualizar estatísticas do cliente se vinculado
-    if (newSaleData.clienteId) {
-      const customerRef = doc(db, 'customers', newSaleData.clienteId);
-      const customer = customers.find(c => c.id === newSaleData.clienteId);
-      if (customer) {
-        await updateDoc(customerRef, {
-          totalComprado: (customer.totalComprado || 0) + newSaleData.total,
-          pedidosCount: (customer.pedidosCount || 0) + 1
-        });
+    // 2. Tentar sincronizar se online
+    if (isOnline) {
+      try {
+        await addDoc(collection(db, 'sales'), saleObj);
+        // Atualizar estatísticas do cliente se vinculado
+        if (newSaleData.clienteId) {
+          const customerRef = doc(db, 'customers', newSaleData.clienteId);
+          const customer = customers.find(c => c.id === newSaleData.clienteId);
+          if (customer) {
+            await updateDoc(customerRef, {
+              totalComprado: (customer.totalComprado || 0) + newSaleData.total,
+              pedidosCount: (customer.pedidosCount || 0) + 1
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao sincronizar venda:", error);
+        // Adicionar à fila de pendentes se falhar
+        const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
+        localStorage.setItem('pending_sales', JSON.stringify([...pending, saleObj]));
       }
+    } else {
+      // 3. Se offline, adicionar à fila de pendentes
+      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
+      localStorage.setItem('pending_sales', JSON.stringify([...pending, saleObj]));
     }
     
     setActiveNav(NavItem.ResumoPedido);
