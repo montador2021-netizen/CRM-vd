@@ -200,6 +200,7 @@ const App: React.FC = () => {
   };
 
   const saveSale = async (newSaleData: any) => {
+    console.log("saveSale called with:", newSaleData);
     const saleObj: Sale = {
       numeroPedido: newSaleData.pedido,
       vendedorId: user?.id || 'unknown',
