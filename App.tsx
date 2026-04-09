@@ -154,7 +154,10 @@ const App: React.FC = () => {
     // Carregar dados do Firestore
     const unsubscribeSales = onSnapshot(collection(db, 'sales'), (snapshot) => {
       const salesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Sale));
-      setSavedSales(salesData);
+      
+      // Mesclar com vendas pendentes locais para evitar que sumam
+      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
+      setSavedSales([...salesData, ...pending]);
     });
 
     const unsubscribeTargets = onSnapshot(doc(db, 'settings', 'targets'), (doc) => {
