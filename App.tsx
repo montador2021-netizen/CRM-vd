@@ -673,13 +673,13 @@ const App: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm">
-              <span className="text-[8px] font-black text-gray-400 uppercase block mb-1">Venda Total</span>
-              <div className="text-lg font-black text-gray-900 truncate">{formatBRL(periodStats.total)}</div>
+            <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm flex flex-col items-center justify-center">
+              <span className="text-[8px] font-black text-gray-400 uppercase mb-1">Venda Total</span>
+              <div className="text-sm font-black text-gray-900 text-center">{formatBRL(periodStats.total)}</div>
             </div>
-            <div className="bg-emerald-50 p-5 rounded-3xl border border-emerald-100 shadow-sm">
-              <span className="text-[8px] font-black text-emerald-600 uppercase block mb-1">Bônus Total</span>
-              <div className="text-lg font-black text-emerald-600 truncate">{formatBRL(periodStats.bonus)}</div>
+            <div className="bg-emerald-50 p-5 rounded-3xl border border-emerald-100 shadow-sm flex flex-col items-center justify-center">
+              <span className="text-[8px] font-black text-emerald-600 uppercase mb-1">Bônus Total</span>
+              <div className="text-sm font-black text-emerald-600 text-center">{formatBRL(periodStats.bonus)}</div>
             </div>
           </div>
 
@@ -720,6 +720,28 @@ const App: React.FC = () => {
                 <span className="text-gray-500 uppercase">Impermeabilização</span>
                 <span className="text-gray-900 font-bold">{formatBRL(periodStats.water)}</span>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-gray-200 space-y-4 shadow-sm">
+            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Relatório de Serviços</h4>
+            <div className="space-y-3">
+              {filteredSales.flatMap(s => s.servicosExtras).reduce((acc: Record<string, number>, service) => {
+                acc[service] = (acc[service] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>).length === 0 ? (
+                <p className="text-[10px] text-gray-400 text-center">Nenhum serviço extra realizado.</p>
+              ) : (
+                Object.entries(filteredSales.flatMap(s => s.servicosExtras).reduce((acc: Record<string, number>, service) => {
+                  acc[service] = (acc[service] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>)).map(([service, count]) => (
+                  <div key={service} className="flex justify-between text-[11px]">
+                    <span className="text-gray-500 uppercase">{service}</span>
+                    <span className="text-gray-900 font-bold">{count}x</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
