@@ -672,11 +672,11 @@ const App: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm">
               <span className="text-[8px] font-black text-gray-400 uppercase block mb-1">Venda Total</span>
-              <div className="text-xl font-black text-gray-900">{formatBRL(periodStats.total)}</div>
+              <div className="text-lg font-black text-gray-900 truncate">{formatBRL(periodStats.total)}</div>
             </div>
             <div className="bg-emerald-50 p-5 rounded-3xl border border-emerald-100 shadow-sm">
               <span className="text-[8px] font-black text-emerald-600 uppercase block mb-1">Bônus Total</span>
-              <div className="text-xl font-black text-emerald-600">{formatBRL(periodStats.bonus)}</div>
+              <div className="text-lg font-black text-emerald-600 truncate">{formatBRL(periodStats.bonus)}</div>
             </div>
           </div>
 
