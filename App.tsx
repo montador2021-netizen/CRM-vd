@@ -695,7 +695,9 @@ const App: React.FC = () => {
                       className="flex flex-col text-left hover:opacity-70 transition-opacity"
                     >
                        <span className="text-[10px] font-black text-purple-600 underline decoration-purple-200 underline-offset-4">#{sale.numeroPedido}</span>
-                       <span className="text-[8px] font-bold text-gray-400 uppercase mt-0.5">{sale.data}</span>
+                       <span className="text-[8px] font-bold text-gray-400 uppercase mt-0.5">
+                         {new Date(sale.timestamp).toLocaleDateString('pt-BR')} {new Date(sale.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                       </span>
                     </button>
                     <div className="text-right">
                        <div className="text-[11px] font-black text-emerald-600">{formatBRL(sale.total)}</div>
