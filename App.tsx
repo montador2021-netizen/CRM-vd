@@ -854,8 +854,13 @@ const App: React.FC = () => {
     );
   };
 
+  const handleLogin = (newUser: User) => {
+    setUser(newUser);
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
+  };
+
   if (loading) return <div className="h-screen flex items-center justify-center">Carregando...</div>;
-  if (!user) return <Login onLogin={(user) => setUser(user)} />;
+  if (!user) return <Login onLogin={handleLogin} />;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-row selection:bg-purple-500/30 overflow-hidden font-sans">
