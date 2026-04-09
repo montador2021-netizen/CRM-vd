@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Login, User } from './src/components/Login';
+import { UserIdentification } from './src/components/UserIdentification';
+import { User } from './src/types';
 import Sidebar from './components/Sidebar';
 import SaleForm from './components/SaleForm';
 import Settings from './components/Settings';
@@ -860,7 +861,7 @@ const App: React.FC = () => {
   };
 
   if (loading) return <div className="h-screen flex items-center justify-center">Carregando...</div>;
-  if (!user) return <Login onLogin={handleLogin} />;
+  if (!user) return <UserIdentification onIdentify={handleLogin} />;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-row selection:bg-purple-500/30 overflow-hidden font-sans">
