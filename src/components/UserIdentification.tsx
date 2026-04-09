@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { AlertModal } from './AlertModal';
 
 interface UserIdentificationProps {
   onIdentify: (user: User) => void;
@@ -10,6 +11,7 @@ interface UserIdentificationProps {
 export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdentify }) => {
   const [firstName, setFirstName] = useState('');
   const [store, setStore] = useState('Loja 1');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -30,7 +32,7 @@ export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdenti
       onIdentify(userData);
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
-      alert("Erro ao fazer login com Google. Tente novamente.");
+      setErrorMessage("Erro ao fazer login com Google. Tente novamente.");
     }
   };
 
@@ -52,6 +54,9 @@ export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdenti
 
   return (
     <div className="flex flex-col items-center justify-center h-screen p-6 bg-gray-50">
+      {errorMessage && (
+        <AlertModal message={errorMessage} onClose={() => setErrorMessage(null)} />
+      )}
       <h1 className="text-3xl font-black text-gray-900 mb-8 uppercase italic">V&C Quantum CRM</h1>
       <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-lg border border-gray-100 space-y-4">
         <h2 className="text-xl font-bold text-center mb-4">Identifique-se</h2>
