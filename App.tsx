@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserIdentification } from './src/components/UserIdentification';
-import { PasswordModal } from './components/PasswordModal';
 import { User } from './src/types';
 import Sidebar from './components/Sidebar';
 import SaleForm from './components/SaleForm';
@@ -72,26 +71,9 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const isAdmin = user?.firstName === 'Valmir' && user?.lastName === 'Melo';
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [pendingNav, setPendingNav] = useState<NavItem | null>(null);
 
   const handleNavSelect = (navItem: NavItem) => {
-    if (navItem === NavItem.Meta || navItem === NavItem.Relatorios) {
-      setPendingNav(navItem);
-      setIsPasswordModalOpen(true);
-    } else {
-      setActiveNav(navItem);
-    }
-  };
-
-  const confirmPassword = (password: string) => {
-    if (password === 'Brasil@7') {
-      if (pendingNav) setActiveNav(pendingNav);
-      setIsPasswordModalOpen(false);
-      setPendingNav(null);
-    } else {
-      alert('Senha incorreta!');
-    }
+    setActiveNav(navItem);
   };
 
   useEffect(() => {
@@ -1035,11 +1017,6 @@ const App: React.FC = () => {
         setIsCollapsed={setIsSidebarCollapsed} 
         activeItem={activeNav} 
         onSelect={handleNavSelect}
-      />
-      <PasswordModal 
-        isOpen={isPasswordModalOpen} 
-        onClose={() => setIsPasswordModalOpen(false)} 
-        onConfirm={confirmPassword} 
       />
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
