@@ -32,7 +32,7 @@ export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdenti
       onIdentify(userData);
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
-      setErrorMessage("Erro ao fazer login com Google. Tente novamente.");
+      setErrorMessage("Erro ao fazer login. Verifique se o navegador está bloqueando pop-ups e tente novamente.");
     }
   };
 
