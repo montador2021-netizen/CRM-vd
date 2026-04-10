@@ -341,19 +341,24 @@ const App: React.FC = () => {
     
     const pComissaoBase = pTotal * 0.022;
     const aComissao = aTotal * (aPerc >= 1 ? 0.10 : 0.05);
+    
+    // Bônus Garantia: 0.6% do valor do produto se bater 100% em tudo
+    const bateuTudo = aPerc >= 1 && iPerc >= 1 && pPerc >= 1;
+    const bonusGarantia = bateuTudo ? pTotal * 0.006 : 0;
+    
     const accelBonus = level > 0 ? targets.levels[level as 1|2|3].reward : 0;
     
-    // Dobra da garantia: 100% de assistência, 100% de impermeabilização e 100% do monetário
-    const garantiaDobrada = aPerc >= 1 && iPerc >= 1 && pPerc >= 1;
-    const finalBonus = garantiaDobrada ? accelBonus * 2 : accelBonus;
+    // Dobra da garantia: Se bateu tudo, dobra o bônus do acelerador
+    const finalBonusAcelerador = bateuTudo ? accelBonus * 2 : accelBonus;
 
     return {
       pTotal, aTotal, iTotal, pPerc, aPerc, iPerc, level,
       comissaoProdutos: pComissaoBase,
       comissaoAssistencia: aComissao,
+      bonusGarantia: bonusGarantia,
       bonusServicos: totalExtras,
-      bonusAcelerador: finalBonus,
-      ganhosTotais: pComissaoBase + aComissao + totalExtras + finalBonus,
+      bonusAcelerador: finalBonusAcelerador,
+      ganhosTotais: pComissaoBase + aComissao + totalExtras + finalBonusAcelerador + bonusGarantia,
       faturamentoGeral: pTotal + aTotal + iTotal
     };
   }, [savedSales, targets]);
@@ -986,6 +991,12 @@ const App: React.FC = () => {
                  <span className="text-[9px] font-bold text-gray-500 uppercase">Comissão Garantia</span>
                  <span className="text-[11px] font-black text-gray-900">{formatBRL(stats.comissaoAssistencia)}</span>
               </div>
+              {stats.bonusGarantia > 0 && (
+                <div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
+                   <span className="text-[9px] font-bold text-emerald-600 uppercase">Bônus Garantia (0.6%)</span>
+                   <span className="text-[11px] font-black text-emerald-600">{formatBRL(stats.bonusGarantia)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center p-4 rounded-2xl bg-gray-50 border border-gray-100">
                  <span className="text-[9px] font-bold text-gray-500 uppercase">Bônus Serviços Fixos</span>
                  <span className="text-[11px] font-black text-gray-900">{formatBRL(stats.bonusServicos)}</span>

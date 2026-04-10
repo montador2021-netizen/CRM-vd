@@ -63,6 +63,7 @@ export interface DashboardStats {
   level: number;
   comissaoProdutos: number;
   comissaoAssistencia: number;
+  bonusGarantia: number;
   bonusServicos: number;
   bonusAcelerador: number;
   ganhosTotais: number;
