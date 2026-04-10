@@ -84,7 +84,7 @@ export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdenti
                 <span className="text-gray-500 text-xs text-center">Foto</span>
               )}
             </div>
-            <input type="file" accept="image/*" capture="user" onChange={handlePhotoCapture} className="hidden" />
+            <input type="file" accept="image/*" onChange={handlePhotoCapture} className="hidden" />
           </label>
         </div>
         
