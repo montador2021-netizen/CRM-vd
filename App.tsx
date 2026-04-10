@@ -550,11 +550,11 @@ const App: React.FC = () => {
                   <div className="flex justify-between items-end">
                     <div>
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.name}</span>
-                      <div className="text-2xl font-black text-gray-900">{formatBRL(item.value)}</div>
+                      <div className="text-2xl font-black text-gray-900 truncate">{formatBRL(item.value)}</div>
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Meta</span>
-                      <div className="text-sm font-black text-gray-500">{formatBRL(item.target)}</div>
+                      <div className="text-sm font-black text-gray-500 truncate">{formatBRL(item.target)}</div>
                     </div>
                   </div>
                   
@@ -570,7 +570,7 @@ const App: React.FC = () => {
                   
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] font-black text-gray-900">{perc.toFixed(1)}%</span>
-                    <span className="text-[9px] font-black text-gray-400 uppercase">Faltam {formatBRL(Math.max(0, item.target - item.value))}</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase truncate">Faltam {formatBRL(Math.max(0, item.target - item.value))}</span>
                   </div>
                 </div>
               );
