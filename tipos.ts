@@ -24,7 +24,6 @@ export interface Sale {
 export interface LevelConfig {
   threshold: number; // Porcentagem mínima para atingir o nível (ex: 100)
   rate: number;      // Taxa de bônus aplicada (ex: 0.6)
-  reward: number;    // Valor da premiação (ex: 50)
 }
 
 /**

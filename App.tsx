@@ -51,9 +51,9 @@ const DEFAULT_TARGETS: Targets = {
   assistance: 3000,
   waterproofing: 2000,
   levels: {
-    1: { threshold: 100, rate: 0.6, reward: 50 },
-    2: { threshold: 120, rate: 0.8, reward: 100 },
-    3: { threshold: 140, rate: 1.1, reward: 200 }
+    1: { threshold: 100, rate: 0.6 },
+    2: { threshold: 120, rate: 0.8 },
+    3: { threshold: 140, rate: 1.1 }
   }
 };
 
@@ -346,7 +346,7 @@ const App: React.FC = () => {
     const bateuTudo = aPerc >= 1 && iPerc >= 1 && pPerc >= 1;
     const bonusGarantia = bateuTudo ? pTotal * 0.006 : 0;
     
-    const accelBonus = level > 0 ? targets.levels[level as 1|2|3].reward : 0;
+    const accelBonus = level > 0 ? pTotal * (targets.levels[level as 1|2|3].rate / 100) : 0;
     
     // Dobra da garantia: Se bateu tudo, dobra o bônus do acelerador
     const finalBonusAcelerador = bateuTudo ? accelBonus * 2 : accelBonus;
@@ -595,7 +595,6 @@ const App: React.FC = () => {
                     <Zap size={20} className={stats.level >= lvl ? 'text-purple-600' : 'text-gray-300'} />
                   </div>
                   <span className="text-[10px] font-black text-gray-800">Lvl {lvl}</span>
-                  <span className="text-[8px] font-bold text-gray-500">{formatBRL(targets.levels[lvl as 1|2|3].reward)}</span>
                 </div>
               ))}
             </div>
