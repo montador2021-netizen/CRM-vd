@@ -383,7 +383,10 @@ const App: React.FC = () => {
         >
           <div className="text-center space-y-4">
             {user && (
-              <div className="bg-purple-50 px-6 py-3 rounded-full mb-6 inline-block">
+              <div className="bg-purple-50 px-6 py-3 rounded-full mb-6 inline-flex items-center gap-3">
+                {user.photoUrl && (
+                  <img src={user.photoUrl} alt="Foto" className="w-8 h-8 rounded-full object-cover" />
+                )}
                 <p className="text-purple-800 font-black uppercase text-[10px] tracking-[0.2em]">
                   {user.firstName} | {user.store}
                 </p>

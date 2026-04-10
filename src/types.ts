@@ -5,4 +5,5 @@ export interface User {
   store: string;
   password: string;
   role: 'vendedor' | 'admin';
+  photoUrl?: string;
 }

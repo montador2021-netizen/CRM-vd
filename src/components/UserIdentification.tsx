@@ -11,7 +11,19 @@ interface UserIdentificationProps {
 export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdentify }) => {
   const [firstName, setFirstName] = useState('');
   const [store, setStore] = useState('Loja 1');
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -25,7 +37,8 @@ export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdenti
         lastName: '',
         store: store,
         password: '',
-        role: (user.email === 'montador2021@gmail.com') ? 'admin' : 'vendedor'
+        role: (user.email === 'montador2021@gmail.com') ? 'admin' : 'vendedor',
+        photoUrl: photoUrl || user.photoURL || undefined
       };
       
       localStorage.setItem('currentUser', JSON.stringify(userData));
@@ -45,7 +58,8 @@ export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdenti
       lastName: '',
       store: store,
       password: '',
-      role: (firstName.trim() === 'Valmir') ? 'admin' : 'vendedor'
+      role: (firstName.trim() === 'Valmir') ? 'admin' : 'vendedor',
+      photoUrl: photoUrl || undefined
     };
     
     localStorage.setItem('currentUser', JSON.stringify(user));
@@ -60,6 +74,19 @@ export const UserIdentification: React.FC<UserIdentificationProps> = ({ onIdenti
       <h1 className="text-3xl font-black text-gray-900 mb-8 uppercase italic">V&C Quantum CRM</h1>
       <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-lg border border-gray-100 space-y-4">
         <h2 className="text-xl font-bold text-center mb-4">Identifique-se</h2>
+        
+        <div className="flex justify-center mb-4">
+          <label className="cursor-pointer">
+            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+              {photoUrl ? (
+                <img src={photoUrl} alt="Foto" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-gray-500 text-xs text-center">Foto</span>
+              )}
+            </div>
+            <input type="file" accept="image/*" capture="user" onChange={handlePhotoCapture} className="hidden" />
+          </label>
+        </div>
         
         <button 
           onClick={handleGoogleLogin} 
