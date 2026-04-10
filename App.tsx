@@ -162,9 +162,17 @@ const App: React.FC = () => {
 
     const unsubscribeTargets = onSnapshot(doc(db, 'settings', 'targets'), (doc) => {
       if (doc.exists()) {
-        setTargets(doc.data() as Targets);
+        const remoteTargets = doc.data() as Targets;
+        setTargets(remoteTargets);
+        localStorage.setItem(TARGETS_KEY, JSON.stringify(remoteTargets));
       }
     });
+
+    // Carregar metas do localStorage se disponível (offline first)
+    const localTargets = localStorage.getItem(TARGETS_KEY);
+    if (localTargets) {
+      setTargets(JSON.parse(localTargets));
+    }
 
     const unsubscribeCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => {
       const customersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Customer));
@@ -188,13 +196,21 @@ const App: React.FC = () => {
   const saveTargets = async (newTargets: Targets) => {
     try {
       console.log("Saving targets:", newTargets);
+      // Salva no Firebase (Online)
       await setDoc(doc(db, 'settings', 'targets'), newTargets);
+      // Salva no localStorage (Offline)
+      localStorage.setItem(TARGETS_KEY, JSON.stringify(newTargets));
+      
       setTargets(newTargets);
       setActiveNav(NavItem.Resumos);
       console.log("Targets saved successfully");
     } catch (error) {
       console.error("Error saving targets:", error);
-      alert("Erro ao salvar metas. Verifique sua conexão.");
+      // Mesmo com erro no Firebase, salva no localStorage para garantir offline
+      localStorage.setItem(TARGETS_KEY, JSON.stringify(newTargets));
+      setTargets(newTargets);
+      setActiveNav(NavItem.Resumos);
+      alert("Metas salvas localmente (modo offline).");
     }
   };
 
