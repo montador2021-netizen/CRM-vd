@@ -181,8 +181,8 @@ const App: React.FC = () => {
   }, [customers]);
 
   const filteredSales = useMemo(() => {
-    if (isAdmin) return savedSales;
-    return savedSales.filter(sale => sale.vendedorId === user?.id);
+    const sales = isAdmin ? savedSales : savedSales.filter(sale => sale.vendedorId === user?.id);
+    return sales.filter(sale => sale.status !== 'cancelado');
   }, [savedSales, isAdmin, user]);
 
   const saveTargets = async (newTargets: Targets) => {
@@ -209,12 +209,26 @@ const App: React.FC = () => {
     setDeferredPrompt(null);
   };
 
+  const cancelSale = async (sale: Sale) => {
+    if (!sale.id) return;
+    try {
+      await updateDoc(doc(db, 'sales', sale.id), { status: 'cancelado' });
+      // Atualizar estado local
+      setSavedSales(prev => prev.map(s => s.id === sale.id ? { ...s, status: 'cancelado' } : s));
+      // Atualizar localStorage
+      const updatedSales = savedSales.map(s => s.id === sale.id ? { ...s, status: 'cancelado' } : s);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
+    } catch (error) {
+      console.error("Erro ao cancelar venda:", error);
+      alert("Erro ao cancelar venda. Tente novamente.");
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     setUser(null);
     window.location.reload();
   };
-
 
   const saveSale = async (newSaleData: any) => {
     console.log("saveSale called with:", newSaleData);
@@ -230,7 +244,8 @@ const App: React.FC = () => {
       comissaoProduto: newSaleData.comissaoProduto,
       servicosExtras: newSaleData.servicosExtras,
       data: new Date().toLocaleDateString('pt-BR'),
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      status: 'ativo'
     };
     console.log("Created saleObj:", saleObj);
 
@@ -275,9 +290,10 @@ const App: React.FC = () => {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
   const stats = useMemo<DashboardStats>(() => {
-    const pTotal = savedSales.reduce((acc, s) => acc + s.valorProduto, 0);
-    const aTotal = savedSales.reduce((acc, s) => acc + s.valorAssistencia, 0);
-    const iTotal = savedSales.reduce((acc, s) => acc + s.valorImpermeabilizacao, 0);
+    const activeSales = savedSales.filter(s => s.status !== 'cancelado');
+    const pTotal = activeSales.reduce((acc, s) => acc + s.valorProduto, 0);
+    const aTotal = activeSales.reduce((acc, s) => acc + s.valorAssistencia, 0);
+    const iTotal = activeSales.reduce((acc, s) => acc + s.valorImpermeabilizacao, 0);
     const pPerc = targets.product > 0 ? (pTotal / targets.product) : 0;
     const aPerc = targets.assistance > 0 ? (aTotal / targets.assistance) : 0;
     const iPerc = targets.waterproofing > 0 ? (iTotal / targets.waterproofing) : 0;
@@ -291,7 +307,7 @@ const App: React.FC = () => {
     });
 
     const serviceCounts = { 'Montagem': 0, 'Lavagem': 0, 'Almofada': 0, 'Pés G-Roupa': 0, 'Impermeab.': 0 };
-    savedSales.forEach(s => {
+    savedSales.filter(s => s.status !== 'cancelado').forEach(s => {
       if (s.servicosExtras && Array.isArray(s.servicosExtras)) {
         s.servicosExtras.forEach(ex => { 
           if (Object.prototype.hasOwnProperty.call(serviceCounts, ex)) {
@@ -617,7 +633,7 @@ const App: React.FC = () => {
       const filteredSales = savedSales.filter(s => {
         const diffTime = Math.abs(Date.now() - s.timestamp);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= reportPeriod;
+        return diffDays <= reportPeriod && s.status !== 'cancelado';
       });
 
       const periodStats = {
@@ -798,9 +814,18 @@ const App: React.FC = () => {
                          {new Date(sale.timestamp).toLocaleDateString('pt-BR')} {new Date(sale.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                        </span>
                     </button>
-                    <div className="text-right">
+                    <div className="flex flex-col items-end gap-1">
                        <div className="text-[11px] font-black text-emerald-600">{formatBRL(sale.total)}</div>
-                       <div className="text-[8px] font-bold text-gray-400 uppercase">Total</div>
+                       {sale.status === 'cancelado' ? (
+                         <span className="text-[8px] font-black text-red-500 uppercase">Cancelado</span>
+                       ) : (
+                         <button 
+                           onClick={() => cancelSale(sale)}
+                           className="text-[8px] font-black text-red-500 uppercase underline"
+                         >
+                           Cancelar
+                         </button>
+                       )}
                     </div>
                  </div>
                ))

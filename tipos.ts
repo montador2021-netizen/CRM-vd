@@ -15,6 +15,7 @@ export interface Sale {
   bonusTotal: number; // Soma de comissões + bônus fixos
   comissaoProduto: number; // Base 2.2%
   servicosExtras: string[]; // Lista de nomes dos bônus fixos (ex: ["Montagem", "Lavagem"])
+  status?: 'ativo' | 'cancelado';
 }
 
 /**
