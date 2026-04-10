@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserIdentification } from './src/components/UserIdentification';
+import { PasswordModal } from './components/PasswordModal';
 import { User } from './src/types';
 import Sidebar from './components/Sidebar';
 import SaleForm from './components/SaleForm';
@@ -71,7 +72,28 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const isAdmin = user?.firstName === 'Valmir' && user?.lastName === 'Melo';
-  
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [pendingNav, setPendingNav] = useState<NavItem | null>(null);
+
+  const handleNavSelect = (navItem: NavItem) => {
+    if (navItem === NavItem.Meta || navItem === NavItem.Relatorios) {
+      setPendingNav(navItem);
+      setIsPasswordModalOpen(true);
+    } else {
+      setActiveNav(navItem);
+    }
+  };
+
+  const confirmPassword = (password: string) => {
+    if (password === 'Brasil@7') {
+      if (pendingNav) setActiveNav(pendingNav);
+      setIsPasswordModalOpen(false);
+      setPendingNav(null);
+    } else {
+      alert('Senha incorreta!');
+    }
+  };
+
   useEffect(() => {
     let unsubscribe = () => {};
     // Check localStorage first
@@ -270,9 +292,11 @@ const App: React.FC = () => {
     console.log("Updating savedSales state with:", updatedSales);
     setSavedSales(updatedSales);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
-    console.log("Saved to localStorage");
+    
+    // 2. Limpar formulário e redirecionar imediatamente
+    setActiveNav(NavItem.ResumoPedido);
 
-    // 2. Tentar sincronizar se online
+    // 3. Tentar sincronizar se online (em segundo plano)
     if (isOnline) {
       try {
         await addDoc(collection(db, 'sales'), saleObj);
@@ -298,8 +322,6 @@ const App: React.FC = () => {
       const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
       localStorage.setItem('pending_sales', JSON.stringify([...pending, saleObj]));
     }
-    
-    setActiveNav(NavItem.ResumoPedido);
   };
 
   const formatBRL = (val: number) => 
@@ -1012,9 +1034,12 @@ const App: React.FC = () => {
         isCollapsed={isSidebarCollapsed} 
         setIsCollapsed={setIsSidebarCollapsed} 
         activeItem={activeNav} 
-        onSelect={(item) => { 
-          setActiveNav(item); 
-        }} 
+        onSelect={handleNavSelect}
+      />
+      <PasswordModal 
+        isOpen={isPasswordModalOpen} 
+        onClose={() => setIsPasswordModalOpen(false)} 
+        onConfirm={confirmPassword} 
       />
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
