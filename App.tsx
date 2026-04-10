@@ -186,9 +186,16 @@ const App: React.FC = () => {
   }, [savedSales, isAdmin, user]);
 
   const saveTargets = async (newTargets: Targets) => {
-    await setDoc(doc(db, 'settings', 'targets'), newTargets);
-    setTargets(newTargets);
-    setActiveNav(NavItem.Resumos);
+    try {
+      console.log("Saving targets:", newTargets);
+      await setDoc(doc(db, 'settings', 'targets'), newTargets);
+      setTargets(newTargets);
+      setActiveNav(NavItem.Resumos);
+      console.log("Targets saved successfully");
+    } catch (error) {
+      console.error("Error saving targets:", error);
+      alert("Erro ao salvar metas. Verifique sua conexão.");
+    }
   };
 
   const handleInstallApp = async () => {
