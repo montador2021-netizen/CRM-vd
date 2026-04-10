@@ -614,6 +614,12 @@ const App: React.FC = () => {
     }
 
     if (activeNav === NavItem.ResumoServico) {
+      const totalAssistencia = savedSales.filter(s => s.status !== 'cancelado').reduce((acc, s) => acc + s.valorAssistencia, 0);
+      const totalComissaoAssistencia = savedSales.filter(s => s.status !== 'cancelado').reduce((acc, s) => {
+        const pPerc = targets.product > 0 ? (s.valorProduto / targets.product) : 0;
+        return acc + (s.valorAssistencia * (pPerc >= 1 ? 0.10 : 0.05));
+      }, 0);
+
       const serviceData = [
         { name: 'Montagem', count: 0, bonus: 10, color: '#9333ea' },
         { name: 'Lavagem', count: 0, bonus: 40, color: '#6366f1' },
@@ -629,7 +635,7 @@ const App: React.FC = () => {
         });
       });
 
-      const totalServiceBonus = serviceData.reduce((acc, d) => acc + (d.count * d.bonus), 0);
+      const totalServiceBonus = serviceData.reduce((acc, d) => acc + (d.count * d.bonus), 0) + totalComissaoAssistencia;
 
       return (
         <motion.div 
@@ -640,17 +646,34 @@ const App: React.FC = () => {
           <div className="bg-white p-5 rounded-2xl border border-gray-200 flex items-center justify-between shadow-sm">
             <div>
               <h2 className="text-xl font-black text-gray-800 italic tracking-tighter uppercase leading-none">Serviços</h2>
-              <span className="text-[8px] font-black text-purple-600 tracking-[0.3em] uppercase">Resumo de Extras</span>
+              <span className="text-[8px] font-black text-purple-600 tracking-[0.3em] uppercase">Resumo de Extras & Garantia</span>
             </div>
             <button onClick={() => setActiveNav(NavItem.Resumos)} className="bg-gray-100 text-gray-600 px-5 py-3 rounded-xl font-black text-[10px] uppercase border border-gray-200">Voltar</button>
           </div>
 
           <div className="bg-white p-8 rounded-3xl border border-gray-200 flex flex-col items-center justify-center space-y-2 shadow-sm">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ganhos Extras Totais</span>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ganhos Totais (Extras + Garantia)</span>
             <div className="text-4xl font-black text-emerald-600">{formatBRL(totalServiceBonus)}</div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
+            {/* Garantia Row */}
+            <div className="bg-white p-5 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 border border-emerald-100">
+                  <ShieldCheck size={18} className="text-emerald-600" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Garantia (Assistência)</span>
+                  <div className="text-[8px] font-bold text-gray-400 uppercase">{formatBRL(totalAssistencia)} Total</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-black text-gray-900">{formatBRL(totalComissaoAssistencia)}</div>
+                <div className="text-[8px] font-bold text-emerald-600 uppercase">5% ou 10%</div>
+              </div>
+            </div>
+
             {serviceData.map((item) => (
               <div key={item.name} className="bg-white p-5 rounded-2xl border border-gray-200 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
