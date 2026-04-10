@@ -9,9 +9,10 @@ interface SettingsProps {
   onClose: () => void;
   showInstallBtn?: boolean;
   onInstall?: () => void;
+  onLogout: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ targets, onSave, onClose, showInstallBtn, onInstall }) => {
+const Settings: React.FC<SettingsProps> = ({ targets, onSave, onClose, showInstallBtn, onInstall, onLogout }) => {
   const [tempTargets, setTempTargets] = useState<Targets>(targets);
 
   const handleLevelChange = (level: 1 | 2 | 3, field: 'threshold' | 'rate', value: number) => {
@@ -143,6 +144,13 @@ const Settings: React.FC<SettingsProps> = ({ targets, onSave, onClose, showInsta
             <Save size={14} /> Salvar Alterações
           </button>
         </div>
+
+        <button 
+          onClick={onLogout}
+          className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-red-100 flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-red-100"
+        >
+          Sair da Loja
+        </button>
       </div>
     </motion.div>
   );

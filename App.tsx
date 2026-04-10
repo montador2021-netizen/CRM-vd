@@ -209,6 +209,13 @@ const App: React.FC = () => {
     setDeferredPrompt(null);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    setUser(null);
+    window.location.reload();
+  };
+
+
   const saveSale = async (newSaleData: any) => {
     console.log("saveSale called with:", newSaleData);
     const saleObj: Sale = {
@@ -464,6 +471,7 @@ const App: React.FC = () => {
         onClose={() => setActiveNav(NavItem.Resumos)} 
         showInstallBtn={showInstallBtn}
         onInstall={handleInstallApp}
+        onLogout={handleLogout}
       />
     );
 
