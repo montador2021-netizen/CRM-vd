@@ -382,6 +382,13 @@ const App: React.FC = () => {
           className="h-full flex flex-col items-center justify-center p-8 space-y-12"
         >
           <div className="text-center space-y-4">
+            {user && (
+              <div className="bg-purple-50 px-6 py-3 rounded-full mb-6 inline-block">
+                <p className="text-purple-800 font-black uppercase text-[10px] tracking-[0.2em]">
+                  {user.firstName} | {user.store}
+                </p>
+              </div>
+            )}
             <div className="w-24 h-24 bg-purple-600 rounded-[2.5rem] flex items-center justify-center text-white mx-auto shadow-2xl shadow-purple-500/40 animate-bounce duration-[3000ms]">
               <ShieldCheck size={48} />
             </div>
