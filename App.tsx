@@ -51,9 +51,9 @@ const DEFAULT_TARGETS: Targets = {
   assistance: 3000,
   waterproofing: 2000,
   levels: {
-    1: { threshold: 100, rate: 0.6 },
-    2: { threshold: 120, rate: 0.8 },
-    3: { threshold: 140, rate: 1.1 }
+    1: { threshold: 100, rate: 0.6, reward: 50 },
+    2: { threshold: 120, rate: 0.8, reward: 100 },
+    3: { threshold: 140, rate: 1.1, reward: 200 }
   }
 };
 
@@ -341,15 +341,19 @@ const App: React.FC = () => {
     
     const pComissaoBase = pTotal * 0.022;
     const aComissao = aTotal * (aPerc >= 1 ? 0.10 : 0.05);
-    const accelBonus = pTotal * (level > 0 ? targets.levels[level as 1|2|3].rate / 100 : 0);
+    const accelBonus = level > 0 ? targets.levels[level as 1|2|3].reward : 0;
+    
+    // Dobra da garantia: 100% de assistência, 100% de impermeabilização e 100% do monetário
+    const garantiaDobrada = aPerc >= 1 && iPerc >= 1 && pPerc >= 1;
+    const finalBonus = garantiaDobrada ? accelBonus * 2 : accelBonus;
 
     return {
       pTotal, aTotal, iTotal, pPerc, aPerc, iPerc, level,
       comissaoProdutos: pComissaoBase,
       comissaoAssistencia: aComissao,
       bonusServicos: totalExtras,
-      bonusAcelerador: accelBonus,
-      ganhosTotais: pComissaoBase + aComissao + accelBonus + totalExtras,
+      bonusAcelerador: finalBonus,
+      ganhosTotais: pComissaoBase + aComissao + totalExtras + finalBonus,
       faturamentoGeral: pTotal + aTotal + iTotal
     };
   }, [savedSales, targets]);
@@ -586,9 +590,15 @@ const App: React.FC = () => {
                     <Zap size={20} className={stats.level >= lvl ? 'text-purple-600' : 'text-gray-300'} />
                   </div>
                   <span className="text-[10px] font-black text-gray-800">Lvl {lvl}</span>
+                  <span className="text-[8px] font-bold text-gray-500">{formatBRL(targets.levels[lvl as 1|2|3].reward)}</span>
                 </div>
               ))}
             </div>
+            {stats.pPerc >= 1 && stats.aPerc >= 1 && stats.iPerc >= 1 && (
+              <div className="mt-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl font-black text-[10px] uppercase border border-emerald-200 animate-pulse">
+                Garantia Dobrada Ativa! Premiação em dobro.
+              </div>
+            )}
             <p className="text-[10px] font-medium text-gray-500 max-w-[200px] mx-auto">
               {stats.level === 3 
                 ? "Parabéns! Você atingiu o nível máximo de aceleração." 

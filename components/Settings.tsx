@@ -15,7 +15,7 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ targets, onSave, onClose, showInstallBtn, onInstall, onLogout }) => {
   const [tempTargets, setTempTargets] = useState<Targets>(targets);
 
-  const handleLevelChange = (level: 1 | 2 | 3, field: 'threshold' | 'rate', value: number) => {
+  const handleLevelChange = (level: 1 | 2 | 3, field: 'threshold' | 'rate' | 'reward', value: number) => {
     setTempTargets({
       ...tempTargets,
       levels: {
@@ -104,6 +104,15 @@ const Settings: React.FC<SettingsProps> = ({ targets, onSave, onClose, showInsta
                     step="0.1"
                     value={tempTargets.levels[lvl as 1|2|3].rate}
                     onChange={(e) => handleLevelChange(lvl as 1|2|3, 'rate', Number(e.target.value))}
+                    className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-800 font-bold text-xs outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[8px] font-bold text-gray-500 uppercase block mb-1">Premiação (R$)</label>
+                  <input 
+                    type="number" 
+                    value={tempTargets.levels[lvl as 1|2|3].reward}
+                    onChange={(e) => handleLevelChange(lvl as 1|2|3, 'reward', Number(e.target.value))}
                     className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-800 font-bold text-xs outline-none focus:border-indigo-500"
                   />
                 </div>
