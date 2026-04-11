@@ -340,25 +340,28 @@ const App: React.FC = () => {
     const totalExtras = Object.keys(serviceCounts).reduce((acc, k) => acc + ((serviceCounts as any)[k] * (k === 'Lavagem' || k === 'Impermeab.' ? 40 : k === 'Pés G-Roupa' ? 7 : 10)), 0);
     
     const pComissaoBase = pTotal * 0.022;
-    const aComissao = aTotal * (aPerc >= 1 ? 0.10 : 0.05);
     
-    // Bônus Garantia: 0.6% do valor do produto se bater 100% em tudo
+    // Regra da Garantia: 10% se bater as 3 metas, 5% caso contrário
     const bateuTudo = aPerc >= 1 && iPerc >= 1 && pPerc >= 1;
-    const bonusGarantia = bateuTudo ? pTotal * 0.006 : 0;
+    const aComissao = aTotal * (bateuTudo ? 0.10 : 0.05);
     
+    // Bônus Acelerador: Taxa do nível
     const accelBonus = level > 0 ? pTotal * (targets.levels[level as 1|2|3].rate / 100) : 0;
     
-    // Dobra da garantia: Se bateu tudo, dobra o bônus do acelerador
+    // Dobra do Acelerador se bater tudo
     const finalBonusAcelerador = bateuTudo ? accelBonus * 2 : accelBonus;
+    
+    // Bônus Garantia (Premiação extra): 0.6% do valor do produto se bater 100% em tudo
+    const bonusGarantiaExtra = bateuTudo ? pTotal * 0.006 : 0;
 
     return {
       pTotal, aTotal, iTotal, pPerc, aPerc, iPerc, level,
       comissaoProdutos: pComissaoBase,
       comissaoAssistencia: aComissao,
-      bonusGarantia: bonusGarantia,
+      bonusGarantia: bonusGarantiaExtra,
       bonusServicos: totalExtras,
       bonusAcelerador: finalBonusAcelerador,
-      ganhosTotais: pComissaoBase + aComissao + totalExtras + finalBonusAcelerador + bonusGarantia,
+      ganhosTotais: pComissaoBase + aComissao + totalExtras + finalBonusAcelerador + bonusGarantiaExtra,
       faturamentoGeral: pTotal + aTotal + iTotal
     };
   }, [savedSales, targets]);
