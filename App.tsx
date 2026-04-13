@@ -75,6 +75,24 @@ const App: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [targets, setTargets] = useState<Targets>(DEFAULT_TARGETS);
+  const [clickCount, setClickCount] = useState(0);
+  const [showManagerPanel, setShowManagerPanel] = useState(false);
+
+  const handleLogoClick = () => {
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+    if (newCount === 7) {
+      setShowManagerPanel(true);
+      setClickCount(0);
+    }
+  };
+
+  useEffect(() => {
+    if (clickCount > 0) {
+      const timer = setTimeout(() => setClickCount(0), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [clickCount]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -1204,7 +1222,7 @@ const App: React.FC = () => {
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header className="h-16 flex items-center justify-between px-8 sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-           <div className="flex items-center gap-4">
+           <div className="flex items-center gap-4 cursor-pointer" onClick={handleLogoClick}>
              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white">
                <Layout size={18} />
              </div>
