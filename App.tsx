@@ -274,7 +274,15 @@ const App: React.FC = () => {
   };
 
   const cancelSale = async (sale: Sale) => {
-    if (!sale.id) return;
+    // Se for um pedido pendente (sem ID), remove do localStorage
+    if (!sale.id) {
+      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
+      const updatedPending = pending.filter((s: Sale) => s.numeroPedido !== sale.numeroPedido);
+      localStorage.setItem('pending_sales', JSON.stringify(updatedPending));
+      setSavedSales(prev => prev.filter(s => s.numeroPedido !== sale.numeroPedido));
+      return;
+    }
+
     try {
       await updateDoc(doc(db, 'sales', sale.id), { status: 'cancelado' });
       // Atualizar estado local
