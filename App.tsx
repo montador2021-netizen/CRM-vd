@@ -72,6 +72,8 @@ const App: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [reportPeriod, setReportPeriod] = useState<number>(30); // Dias
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [targets, setTargets] = useState<Targets>(DEFAULT_TARGETS);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
@@ -821,9 +823,10 @@ const App: React.FC = () => {
 
     if (activeNav === NavItem.Relatorios) {
       const filteredSales = savedSales.filter(s => {
-        const diffTime = Math.abs(Date.now() - s.timestamp);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= reportPeriod && s.status !== 'cancelado';
+        const saleDate = new Date(s.timestamp).toISOString().split('T')[0];
+        const isAfterStart = startDate ? saleDate >= startDate : true;
+        const isBeforeEnd = endDate ? saleDate <= endDate : true;
+        return isAfterStart && isBeforeEnd && s.status !== 'cancelado';
       });
 
       const periodStats = {
@@ -843,8 +846,7 @@ const App: React.FC = () => {
       };
 
       const sharePeriodReport = () => {
-        const text = `Relatório CRM - Últimos ${reportPeriod} dias\n` +
-          `Período: ${reportPeriod} dias\n` +
+        const text = `Relatório CRM - Período: ${startDate || 'Início'} a ${endDate || 'Hoje'}\n` +
           `Total de Pedidos: ${periodStats.count}\n` +
           `Venda Total: ${formatBRL(periodStats.total)}\n` +
           `Bônus Acumulado: ${formatBRL(periodStats.bonus)}\n` +
@@ -877,20 +879,25 @@ const App: React.FC = () => {
              <button onClick={() => setActiveNav(NavItem.Resumos)} className="bg-gray-100 text-gray-600 px-5 py-3 rounded-xl font-black text-[10px] uppercase border border-gray-200">Voltar</button>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {[5, 10, 15, 30].map(days => (
-              <button
-                key={days}
-                onClick={() => setReportPeriod(days)}
-                className={`flex-1 min-w-[80px] py-3 rounded-xl font-black text-[10px] uppercase transition-all ${
-                  reportPeriod === days 
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20' 
-                    : 'bg-white text-gray-400 border border-gray-200'
-                }`}
-              >
-                {days} Dias
-              </button>
-            ))}
+          <div className="flex flex-col gap-2 pb-2">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">Data Início</label>
+                <input 
+                  type="date" 
+                  className="w-full bg-white border border-gray-200 p-3 rounded-xl text-[10px] font-bold text-gray-800 outline-none focus:border-purple-500"
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">Data Fim</label>
+                <input 
+                  type="date" 
+                  className="w-full bg-white border border-gray-200 p-3 rounded-xl text-[10px] font-bold text-gray-800 outline-none focus:border-purple-500"
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -970,7 +977,7 @@ const App: React.FC = () => {
             onClick={sharePeriodReport}
             className="w-full py-5 bg-purple-600 text-white rounded-3xl font-black text-[12px] uppercase tracking-widest shadow-xl shadow-purple-500/20 active:scale-95 transition-all hover:bg-purple-700"
           >
-            Compartilhar Relatório ({reportPeriod} Dias)
+            Compartilhar Relatório
           </button>
         </div>
       );
