@@ -28,7 +28,9 @@ import {
   CloudLightning,
   Wifi,
   WifiOff,
-  BarChart
+  BarChart,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 
 import { 
@@ -551,7 +553,24 @@ const App: React.FC = () => {
                           </select>
                         </div>
                       </div>
-                      <h4 className="font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors">{opp.title}</h4>
+                      <h4 className="font-bold text-gray-800 mb-1 group-hover:text-purple-600 transition-colors">{opp.title}</h4>
+                      <p className="text-[10px] text-gray-500 mb-3 font-bold">{opp.productInterest}</p>
+                      
+                      {opp.phone && (
+                        <div className="flex items-center justify-between mb-3 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                          <span className="text-[10px] font-bold text-gray-600">{opp.phone}</span>
+                          <a 
+                            href={`https://wa.me/55${opp.phone.replace(/\D/g, '')}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-emerald-500 hover:text-emerald-700 transition-colors"
+                          >
+                            <MessageCircle size={16} />
+                          </a>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between items-center">
                         <div className="text-sm font-bold text-gray-900">{formatBRL(opp.value)}</div>
                         <img src={opp.user.avatar} className="w-6 h-6 rounded-full border border-gray-200" alt={opp.user.name} />

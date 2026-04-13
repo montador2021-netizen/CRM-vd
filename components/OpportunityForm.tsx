@@ -34,6 +34,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ onCancel, onSubmit })
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
+    onCancel(); // Fecha o formulário após salvar
   };
 
   return (
