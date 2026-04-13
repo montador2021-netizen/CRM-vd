@@ -647,14 +647,14 @@ const App: React.FC = () => {
               const perc = item.target > 0 ? (item.value / item.target) * 100 : 0;
               return (
                 <div key={item.name} className="bg-white p-6 rounded-3xl border border-gray-200 space-y-4 shadow-sm">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.name}</span>
-                      <div className="text-2xl font-black text-gray-900 truncate">{formatBRL(item.value)}</div>
+                  <div className="flex justify-between items-end gap-4">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block truncate">{item.name}</span>
+                      <div className="text-xl md:text-2xl font-black text-gray-900 truncate">{formatBRL(item.value)}</div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Meta</span>
-                      <div className="text-sm font-black text-gray-500 truncate">{formatBRL(item.target)}</div>
+                    <div className="text-right min-w-0">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block truncate">Meta</span>
+                      <div className="text-xs md:text-sm font-black text-gray-500 truncate">{formatBRL(item.target)}</div>
                     </div>
                   </div>
                   
