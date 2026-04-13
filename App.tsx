@@ -11,7 +11,7 @@ import { NavItem, Sale, Targets, WeeklyPerformance, DashboardStats, Customer } f
 import { PIPELINE_STAGES, MOCK_OPPORTUNITIES } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth } from './src/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs, setDoc, getDocFromServer } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { 
   Plus, 
@@ -71,6 +71,20 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const isAdmin = user?.firstName === 'Valmir' && user?.lastName === 'Melo';
+
+  // Teste de conexão com o Firebase
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if(error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Erro de conexão Firebase: O cliente está offline.");
+        }
+      }
+    }
+    testConnection();
+  }, []);
 
   const handleNavSelect = (navItem: NavItem) => {
     setActiveNav(navItem);
