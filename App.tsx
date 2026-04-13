@@ -7,7 +7,8 @@ import SaleForm from './components/SaleForm';
 import Settings from './components/Settings';
 import Customers from './components/Customers';
 import InstallPrompt from './components/InstallPrompt';
-import { NavItem, Sale, Targets, WeeklyPerformance, DashboardStats, Customer } from './tipos';
+import OpportunityForm from './components/OpportunityForm';
+import { NavItem, Sale, Targets, WeeklyPerformance, DashboardStats, Customer, Opportunity } from './tipos';
 import { PIPELINE_STAGES, MOCK_OPPORTUNITIES } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth } from './src/firebase';
@@ -62,6 +63,8 @@ const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); 
   const [savedSales, setSavedSales] = useState<Sale[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(MOCK_OPPORTUNITIES);
+  const [isAddingOpportunity, setIsAddingOpportunity] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [reportPeriod, setReportPeriod] = useState<number>(30); // Dias
@@ -85,6 +88,18 @@ const App: React.FC = () => {
     }
     testConnection();
   }, []);
+
+  const addOpportunity = (oppData: Omit<Opportunity, 'id' | 'daysAgo' | 'user' | 'tags'>) => {
+    const newOpp: Opportunity = {
+      ...oppData,
+      id: `VC-${Math.floor(Math.random() * 1000)}`,
+      daysAgo: 0,
+      user: { name: 'Admin', avatar: 'https://picsum.photos/seed/u1/40/40' },
+      tags: []
+    };
+    setOpportunities([...opportunities, newOpp]);
+    setIsAddingOpportunity(false);
+  };
 
   const handleNavSelect = (navItem: NavItem) => {
     setActiveNav(navItem);
@@ -442,23 +457,23 @@ const App: React.FC = () => {
               <div className="w-12 h-1 bg-purple-100 rounded-full group-hover:w-24 group-hover:bg-purple-600 transition-all duration-500"></div>
             </motion.button>
 
-            <div className="bg-gray-50/50 p-10 rounded-[3rem] border border-dashed border-gray-200 flex flex-col items-center justify-center text-center space-y-6 opacity-60 grayscale">
-              <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center text-gray-400">
-                <Star size={32} />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-gray-400 uppercase italic tracking-tighter">Treinamentos</h3>
-                <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-2">Em breve</p>
-              </div>
-            </div>
-
-            <div className="bg-gray-50/50 p-10 rounded-[3rem] border border-dashed border-gray-200 flex flex-col items-center justify-center text-center space-y-6 opacity-60 grayscale">
-              <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center text-gray-400">
-                <Target size={32} />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-gray-400 uppercase italic tracking-tighter">Metas Equipe</h3>
-                <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-2">Em breve</p>
+            <div className="col-span-1 lg:col-span-2 bg-white p-8 rounded-[3rem] border border-gray-100 shadow-xl shadow-gray-200/50">
+              <h3 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter mb-6">Tarefas de Hoje</h3>
+              <div className="space-y-4">
+                {opportunities
+                  .filter(o => o.returnDate === new Date().toISOString().split('T')[0])
+                  .map(o => (
+                    <div key={o.id} className="flex items-center justify-between p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                      <div>
+                        <p className="font-bold text-gray-800">{o.title}</p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold">{o.productInterest}</p>
+                      </div>
+                      <span className="text-[10px] font-black text-purple-600 bg-white px-3 py-1 rounded-full border border-purple-200">RETORNO</span>
+                    </div>
+                  ))}
+                {opportunities.filter(o => o.returnDate === new Date().toISOString().split('T')[0]).length === 0 && (
+                  <p className="text-sm text-gray-400 font-bold italic">Nenhuma tarefa de retorno para hoje.</p>
+                )}
               </div>
             </div>
           </div>
@@ -493,16 +508,17 @@ const App: React.FC = () => {
                     <div className={`w-3 h-3 rounded-full ${stage.color}`}></div>
                     <h3 className="font-semibold text-gray-700 uppercase text-xs tracking-wider">{stage.label}</h3>
                     <span className="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                      {MOCK_OPPORTUNITIES.filter(o => o.stage === stage.id).length}
+                      {opportunities.filter(o => o.stage === stage.id).length}
                     </span>
                   </div>
                 </div>
                 
                 <div className="flex-1 bg-gray-100/50 rounded-xl p-3 space-y-3 border border-gray-200/50">
-                  {MOCK_OPPORTUNITIES.filter(o => o.stage === stage.id).map((opp) => (
+                  {opportunities.filter(o => o.stage === stage.id).map((opp) => (
                     <motion.div 
                       key={opp.id}
                       layoutId={opp.id}
+                      onClick={() => alert(`Detalhes do card: ${opp.title}`)}
                       className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer group"
                     >
                       <div className="flex justify-between items-start mb-2">
@@ -516,13 +532,17 @@ const App: React.FC = () => {
                       </div>
                     </motion.div>
                   ))}
-                  <button className="w-full py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 hover:text-gray-600 hover:border-gray-400 transition-all flex items-center justify-center gap-2 text-sm font-medium">
+                  <button 
+                    onClick={() => setIsAddingOpportunity(true)}
+                    className="w-full py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 hover:text-gray-600 hover:border-gray-400 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                  >
                     <Plus size={16} /> Novo Card
                   </button>
                 </div>
               </div>
             ))}
           </div>
+          {isAddingOpportunity && <OpportunityForm onCancel={() => setIsAddingOpportunity(false)} onSubmit={addOpportunity} />}
         </div>
       );
     }

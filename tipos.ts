@@ -123,4 +123,7 @@ export interface Opportunity {
     avatar: string;
   };
   tags: string[];
+  phone?: string;
+  returnDate?: string;
+  productInterest?: string;
 }

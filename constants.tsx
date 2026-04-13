@@ -18,11 +18,11 @@ import {
 import { NavItem, PipelineStage, Opportunity } from './tipos';
 
 export const PIPELINE_STAGES: PipelineStage[] = [
-  { id: 'lead', label: 'Entrada', color: 'bg-cyan-500' },
-  { id: 'qualificacao', label: 'Triagem', color: 'bg-violet-500' },
-  { id: 'proposta', label: 'Proposta', color: 'bg-blue-500' },
-  { id: 'negociacao', label: 'Negócio', color: 'bg-fuchsia-500' },
-  { id: 'fechamento', label: 'Ganho', color: 'bg-emerald-500' },
+  { id: 'lead', label: 'Atendimento Inicial', color: 'bg-cyan-500' },
+  { id: 'qualificacao', label: 'Aguardando Data/Cartão', color: 'bg-violet-500' },
+  { id: 'proposta', label: 'Aguardando Estoque', color: 'bg-blue-500' },
+  { id: 'negociacao', label: 'Negociação Final', color: 'bg-fuchsia-500' },
+  { id: 'fechamento', label: 'Venda Concluída', color: 'bg-emerald-500' },
 ];
 
 export const NAVIGATION_ITEMS = [
