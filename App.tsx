@@ -811,21 +811,6 @@ const App: React.FC = () => {
                 </div>
               </div>
             )}
-            {stats.bonusGarantia > 0 && (
-              <div className="bg-white p-5 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 border border-emerald-100">
-                    <ShieldCheck size={18} className="text-emerald-600" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Bônus Garantia (Acelerador)</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-black text-emerald-600">{formatBRL(stats.bonusGarantia)}</div>
-                </div>
-              </div>
-            )}
 
             {serviceData.map((item) => (
               <div key={item.name} className="bg-white p-5 rounded-2xl border border-gray-200 flex items-center justify-between shadow-sm">
