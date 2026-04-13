@@ -13,7 +13,8 @@ import {
   ShoppingBag,
   PlusSquare,
   Settings as SettingsIcon,
-  Home
+  Home,
+  Phone
 } from 'lucide-react';
 import { NavItem, PipelineStage, Opportunity } from './tipos';
 

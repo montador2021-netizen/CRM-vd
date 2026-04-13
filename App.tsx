@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserIdentification } from './src/components/UserIdentification';
 import { User } from './src/types';
 import Sidebar from './components/Sidebar';
 import SaleForm from './components/SaleForm';
@@ -30,7 +29,8 @@ import {
   WifiOff,
   BarChart,
   Phone,
-  MessageCircle
+  MessageCircle,
+  CheckSquare
 } from 'lucide-react';
 
 import { 
@@ -160,7 +160,15 @@ const App: React.FC = () => {
             });
           }
         } else {
-          setUser(null);
+          // Usuário padrão se não logado
+          setUser({
+            id: 'anon-default',
+            firstName: 'Visitante',
+            lastName: '',
+            store: 'Loja 1',
+            password: '',
+            role: 'vendedor'
+          });
         }
         setLoading(false);
       });
@@ -571,10 +579,11 @@ const App: React.FC = () => {
                           <select 
                             className="text-[10px] bg-purple-50 text-purple-700 font-bold rounded-lg px-2 py-1 outline-none border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
                             value={opp.stage}
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               e.stopPropagation();
                               const newStage = e.target.value;
                               setOpportunities(opportunities.map(o => o.id === opp.id ? { ...o, stage: newStage } : o));
+                              await updateDoc(doc(db, 'opportunities', opp.id), { stage: newStage });
                             }}
                           >
                             {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -1001,6 +1010,52 @@ const App: React.FC = () => {
       );
     }
 
+    /*
+    if (activeNav === NavItem.Retornos) {
+      const retornosPendentes = savedSales.filter(s => s.dataRetorno && s.statusRetorno === 'pendente');
+      
+      return (
+        <div className="content-section py-2 px-2 space-y-6 animate-in slide-in-from-bottom-6">
+          <div className="bg-white p-5 rounded-2xl border border-gray-200 flex items-center justify-between shadow-sm">
+             <div>
+                <h2 className="text-xl font-black text-gray-800 italic tracking-tighter uppercase leading-none">Retornos</h2>
+                <span className="text-[8px] font-black text-purple-600 tracking-[0.3em] uppercase">Pendentes</span>
+             </div>
+          </div>
+
+          <div className="space-y-3">
+             {retornosPendentes.length === 0 ? (
+               <div className="bg-white p-10 rounded-3xl text-center border border-gray-200 shadow-sm">
+                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nenhum retorno pendente!</p>
+               </div>
+             ) : (
+               retornosPendentes.map((sale, i) => (
+                 <div key={i} className={`bg-white p-5 rounded-2xl border ${new Date(sale.dataRetorno!) <= new Date() ? 'border-red-200' : 'border-gray-200'} flex justify-between items-center shadow-sm`}>
+                    <button 
+                      onClick={() => setSelectedSale(sale)}
+                      className="flex flex-col text-left hover:opacity-70 transition-opacity"
+                    >
+                       <span className="text-[10px] font-black text-purple-600">#{sale.numeroPedido} - {new Date(sale.dataRetorno!).toLocaleDateString('pt-BR')}</span>
+                       <span className="text-[10px] font-bold text-gray-600 mt-0.5">{sale.descricaoRetorno}</span>
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        const saleRef = doc(db, 'sales', sale.id!);
+                        await updateDoc(saleRef, { statusRetorno: 'finalizado' });
+                      }}
+                      className="bg-emerald-50 text-emerald-600 p-2 rounded-lg"
+                    >
+                      <CheckSquare size={16} />
+                    </button>
+                 </div>
+               ))
+             )}
+          </div>
+        </div>
+      );
+    }
+    */
+
     if (activeNav === NavItem.ResumoPedido) {
       return (
         <div className="content-section py-2 px-2 space-y-6 animate-in slide-in-from-bottom-6">
@@ -1202,13 +1257,7 @@ const App: React.FC = () => {
     );
   };
 
-  const handleLogin = (newUser: User) => {
-    setUser(newUser);
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-  };
-
   if (loading) return <div className="h-screen flex items-center justify-center">Carregando...</div>;
-  if (!user) return <UserIdentification onIdentify={handleLogin} />;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-row selection:bg-purple-500/30 overflow-hidden font-sans">
@@ -1278,8 +1327,26 @@ const App: React.FC = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
-                  <span className="text-[8px] font-black text-gray-400 uppercase block mb-3">Composição da Venda</span>
+                  {(selectedSale.dataRetorno || selectedSale.descricaoRetorno) && (
+                    <div className="bg-purple-50 p-5 rounded-2xl border border-purple-100">
+                      <span className="text-[8px] font-black text-purple-600 uppercase block mb-3">Informações de Retorno</span>
+                      <div className="space-y-2">
+                        {selectedSale.dataRetorno && (
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-purple-500 uppercase">Data</span>
+                            <span className="text-purple-900 font-black">{new Date(selectedSale.dataRetorno).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        )}
+                        {selectedSale.descricaoRetorno && (
+                          <div className="text-[11px] text-purple-900 font-bold mt-2 pt-2 border-t border-purple-100">
+                            {selectedSale.descricaoRetorno}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                    <span className="text-[8px] font-black text-gray-400 uppercase block mb-3">Composição da Venda</span>
                   <div className="space-y-3">
                     {selectedSale.clienteId && (
                       <div className="flex justify-between text-[11px] border-b border-gray-100 pb-2 mb-2">

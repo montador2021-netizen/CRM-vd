@@ -81,7 +81,8 @@ export enum NavItem {
   AdicionarVenda = 'Adicionar vendas',
   Configuracoes = 'Configurações',
   Clientes = 'Clientes',
-  Processos = 'Processos'
+  Processos = 'Processos',
+  Retornos = 'Retornos'
 }
 
 /**
