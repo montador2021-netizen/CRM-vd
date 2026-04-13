@@ -120,7 +120,8 @@ const App: React.FC = () => {
       user: { name: 'Admin', avatar: 'https://picsum.photos/seed/u1/40/40' },
       tags: []
     };
-    await addDoc(collection(db, 'opportunities'), newOpp);
+    const docRef = await addDoc(collection(db, 'opportunities'), newOpp);
+    setOpportunities(prev => [...prev, { ...newOpp, id: docRef.id }]);
     setIsAddingOpportunity(false);
   };
 
