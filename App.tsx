@@ -346,10 +346,10 @@ const App: React.FC = () => {
     const aComissao = aTotal * (bateuTudo ? 0.10 : 0.05);
     
     // Bônus Acelerador: Taxa do nível
-    const accelBonus = level > 0 ? pTotal * (targets.levels[level as 1|2|3].rate / 100) : 0;
+    const accelBonus = (level > 0 && bateuTudo) ? pTotal * (targets.levels[level as 1|2|3].rate / 100) : 0;
     
-    // Dobra do Acelerador se bater tudo
-    const finalBonusAcelerador = bateuTudo ? accelBonus * 2 : accelBonus;
+    // Bônus Acelerador (Premiação extra)
+    const finalBonusAcelerador = accelBonus;
     
     // Bônus Garantia (Premiação extra): 0.6% do valor do produto se bater 100% em tudo
     const bonusGarantiaExtra = bateuTudo ? pTotal * 0.006 : 0;
@@ -676,6 +676,38 @@ const App: React.FC = () => {
                 <div className="text-[8px] font-bold text-emerald-600 uppercase">5% ou 10%</div>
               </div>
             </div>
+
+            {/* Bônus Acelerador e Garantia Extra */}
+            {stats.bonusAcelerador > 0 && (
+              <div className="bg-white p-5 rounded-2xl border border-purple-200 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-50 border border-purple-100">
+                    <Zap size={18} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Bônus Acelerador (Nível {stats.level})</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-black text-purple-600">{formatBRL(stats.bonusAcelerador)}</div>
+                </div>
+              </div>
+            )}
+            {stats.bonusGarantia > 0 && (
+              <div className="bg-white p-5 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 border border-emerald-100">
+                    <ShieldCheck size={18} className="text-emerald-600" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Bônus Garantia (Acelerador)</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-black text-emerald-600">{formatBRL(stats.bonusGarantia)}</div>
+                </div>
+              </div>
+            )}
 
             {serviceData.map((item) => (
               <div key={item.name} className="bg-white p-5 rounded-2xl border border-gray-200 flex items-center justify-between shadow-sm">
@@ -1018,7 +1050,7 @@ const App: React.FC = () => {
               </div>
               {stats.bonusGarantia > 0 && (
                 <div className="flex justify-between items-center p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                   <span className="text-[9px] font-bold text-emerald-600 uppercase">Bônus Garantia (0.6%)</span>
+                   <span className="text-[9px] font-bold text-emerald-600 uppercase">Bônus Garantia (Acelerador)</span>
                    <span className="text-[11px] font-black text-emerald-600">{formatBRL(stats.bonusGarantia)}</span>
                 </div>
               )}
