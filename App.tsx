@@ -356,7 +356,19 @@ const App: React.FC = () => {
     setSavedSales(updatedSales);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
     
-    // 2. Limpar formulário e redirecionar imediatamente
+    // 2. Salvar no Firestore
+    try {
+      await addDoc(collection(db, 'sales'), saleObj);
+      console.log("Sale saved to Firestore successfully");
+    } catch (error) {
+      console.error("Error saving sale to Firestore:", error);
+      // Se falhar no Firestore, salva em uma fila de pendentes para tentar depois
+      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
+      localStorage.setItem('pending_sales', JSON.stringify([...pending, saleObj]));
+      alert("Venda salva localmente (offline). Será sincronizada quando houver conexão.");
+    }
+    
+    // 3. Limpar formulário e redirecionar imediatamente
     setActiveNav(NavItem.ResumoPedido);
 
     // 3. Tentar sincronizar se online (em segundo plano)
