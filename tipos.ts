@@ -97,6 +97,9 @@ export interface Customer {
   dataCadastro: string;
   totalComprado: number;
   pedidosCount: number;
+  interesse?: string;
+  dataRetorno?: string;
+  statusRetorno?: 'pendente' | 'finalizado';
 }
 
 /**

@@ -21,7 +21,10 @@ const Customers: React.FC<CustomersProps> = ({ customers, onAdd, onDelete, onUpd
     email: '',
     telefone: '',
     cpf: '',
-    endereco: ''
+    endereco: '',
+    interesse: '',
+    dataRetorno: '',
+    statusRetorno: 'pendente' as 'pendente' | 'finalizado'
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,7 +46,10 @@ const Customers: React.FC<CustomersProps> = ({ customers, onAdd, onDelete, onUpd
       email: customer.email || '',
       telefone: customer.telefone || '',
       cpf: customer.cpf || '',
-      endereco: customer.endereco || ''
+      endereco: customer.endereco || '',
+      interesse: customer.interesse || '',
+      dataRetorno: customer.dataRetorno || '',
+      statusRetorno: customer.statusRetorno || 'pendente'
     });
     setIsAdding(true);
   };
@@ -146,6 +152,34 @@ const Customers: React.FC<CustomersProps> = ({ customers, onAdd, onDelete, onUpd
                   className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-purple-500/20 outline-none font-bold"
                 />
               </div>
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">O que o cliente procura?</label>
+                <input 
+                  value={formData.interesse}
+                  onChange={e => setFormData({...formData, interesse: e.target.value})}
+                  className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-purple-500/20 outline-none font-bold"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Data de Retorno</label>
+                <input 
+                  type="date"
+                  value={formData.dataRetorno}
+                  onChange={e => setFormData({...formData, dataRetorno: e.target.value})}
+                  className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-purple-500/20 outline-none font-bold"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Status</label>
+                <select 
+                  value={formData.statusRetorno}
+                  onChange={e => setFormData({...formData, statusRetorno: e.target.value as 'pendente' | 'finalizado'})}
+                  className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-purple-500/20 outline-none font-bold"
+                >
+                  <option value="pendente">Pendente</option>
+                  <option value="finalizado">Finalizado</option>
+                </select>
+              </div>
               <div className="md:col-span-2 pt-4">
                 <button type="submit" className="w-full bg-purple-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20">
                   <Save size={18} /> {editingCustomer ? 'Salvar Alterações' : 'Cadastrar Cliente'}
@@ -204,6 +238,20 @@ const Customers: React.FC<CustomersProps> = ({ customers, onAdd, onDelete, onUpd
                 {customer.endereco && (
                   <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500">
                     <MapPin size={12} className="text-purple-400" /> {customer.endereco}
+                  </div>
+                )}
+                {customer.interesse && (
+                  <div className="mt-4 p-3 bg-purple-50 rounded-xl border border-purple-100">
+                    <span className="text-[8px] font-black text-purple-600 uppercase block mb-1">Interesse</span>
+                    <p className="text-[11px] font-bold text-purple-900">{customer.interesse}</p>
+                    {customer.dataRetorno && (
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-purple-100">
+                        <span className="text-[9px] font-bold text-purple-400">Retorno: {new Date(customer.dataRetorno).toLocaleDateString('pt-BR')}</span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${customer.statusRetorno === 'finalizado' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {customer.statusRetorno}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
