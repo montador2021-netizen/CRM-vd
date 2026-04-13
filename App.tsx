@@ -8,6 +8,7 @@ import Settings from './components/Settings';
 import Customers from './components/Customers';
 import InstallPrompt from './components/InstallPrompt';
 import OpportunityForm from './components/OpportunityForm';
+import OpportunityEditForm from './components/OpportunityEditForm';
 import { NavItem, Sale, Targets, WeeklyPerformance, DashboardStats, Customer, Opportunity } from './tipos';
 import { PIPELINE_STAGES, MOCK_OPPORTUNITIES } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
@@ -65,6 +66,7 @@ const App: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>(MOCK_OPPORTUNITIES);
   const [isAddingOpportunity, setIsAddingOpportunity] = useState(false);
+  const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [reportPeriod, setReportPeriod] = useState<number>(30); // Dias
@@ -89,16 +91,21 @@ const App: React.FC = () => {
     testConnection();
   }, []);
 
-  const addOpportunity = (oppData: Omit<Opportunity, 'id' | 'daysAgo' | 'user' | 'tags'>) => {
-    const newOpp: Opportunity = {
+  const addOpportunity = async (oppData: Omit<Opportunity, 'id' | 'daysAgo' | 'user' | 'tags'>) => {
+    const newOpp = {
       ...oppData,
-      id: `VC-${Math.floor(Math.random() * 1000)}`,
       daysAgo: 0,
       user: { name: 'Admin', avatar: 'https://picsum.photos/seed/u1/40/40' },
       tags: []
     };
-    setOpportunities([...opportunities, newOpp]);
+    await addDoc(collection(db, 'opportunities'), newOpp);
     setIsAddingOpportunity(false);
+  };
+
+  const saveOpportunity = async (updatedOpp: Opportunity) => {
+    const { id, ...data } = updatedOpp;
+    await updateDoc(doc(db, 'opportunities', id), data);
+    setEditingOpportunity(null);
   };
 
   const handleNavSelect = (navItem: NavItem) => {
@@ -212,12 +219,18 @@ const App: React.FC = () => {
       setCustomers(customersData);
     });
 
+    const unsubscribeOpportunities = onSnapshot(collection(db, 'opportunities'), (snapshot) => {
+      const oppsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Opportunity));
+      setOpportunities(oppsData);
+    });
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', () => setIsOnline(false));
       unsubscribeSales();
       unsubscribeTargets();
       unsubscribeCustomers();
+      unsubscribeOpportunities();
     };
   }, [customers]);
 
@@ -518,12 +531,25 @@ const App: React.FC = () => {
                     <motion.div 
                       key={opp.id}
                       layoutId={opp.id}
-                      onClick={() => alert(`Detalhes do card: ${opp.title}`)}
+                      onClick={() => setEditingOpportunity(opp)}
                       className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer group"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-[10px] font-bold text-purple-600 uppercase bg-purple-50 px-2 py-0.5 rounded">{opp.type}</span>
-                        <span className="text-[10px] text-gray-400">{opp.daysAgo}d</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-gray-400">{opp.daysAgo}d</span>
+                          <select 
+                            className="text-[10px] bg-purple-50 text-purple-700 font-bold rounded-lg px-2 py-1 outline-none border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+                            value={opp.stage}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              const newStage = e.target.value;
+                              setOpportunities(opportunities.map(o => o.id === opp.id ? { ...o, stage: newStage } : o));
+                            }}
+                          >
+                            {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                          </select>
+                        </div>
                       </div>
                       <h4 className="font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors">{opp.title}</h4>
                       <div className="flex justify-between items-center">
@@ -543,6 +569,7 @@ const App: React.FC = () => {
             ))}
           </div>
           {isAddingOpportunity && <OpportunityForm onCancel={() => setIsAddingOpportunity(false)} onSubmit={addOpportunity} />}
+          {editingOpportunity && <OpportunityEditForm opportunity={editingOpportunity} onCancel={() => setEditingOpportunity(null)} onSave={saveOpportunity} />}
         </div>
       );
     }

@@ -2,22 +2,17 @@ import React, { useState } from 'react';
 import { Opportunity } from '../tipos';
 import { X, Save } from 'lucide-react';
 
-interface OpportunityFormProps {
+interface OpportunityEditFormProps {
+  opportunity: Opportunity;
   onCancel: () => void;
-  onSubmit: (opportunity: Omit<Opportunity, 'id' | 'daysAgo' | 'user' | 'tags'>) => void;
+  onSave: (opportunity: Opportunity) => void;
 }
 
-const OpportunityForm: React.FC<OpportunityFormProps> = ({ onCancel, onSubmit }) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    phone: '',
-    productInterest: '',
-    returnDate: '',
-    value: 0,
-    stage: 'lead',
-    type: 'Novo'
-  });
-  const [displayValue, setDisplayValue] = useState('');
+const OpportunityEditForm: React.FC<OpportunityEditFormProps> = ({ opportunity, onCancel, onSave }) => {
+  const [formData, setFormData] = useState<Opportunity>(opportunity);
+  const [displayValue, setDisplayValue] = useState(
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(opportunity.value)
+  );
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '');
@@ -33,14 +28,14 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ onCancel, onSubmit })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSave(formData);
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white p-6 rounded-3xl w-full max-w-md shadow-2xl">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">Novo Card</h3>
+          <h3 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">Editar Card</h3>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -53,7 +48,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ onCancel, onSubmit })
             <input 
               type="tel"
               placeholder="(00) 00000-0000" 
-              value={formData.phone} 
+              value={formData.phone || ''} 
               onChange={e => {
                 const value = e.target.value.replace(/\D/g, '');
                 setFormData({...formData, phone: value});
@@ -63,18 +58,18 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ onCancel, onSubmit })
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black text-gray-500 uppercase">Produto de interesse</label>
-            <input placeholder="Produto de interesse" value={formData.productInterest} onChange={e => setFormData({...formData, productInterest: e.target.value})} className="w-full bg-white border border-gray-300 p-3 rounded-xl outline-none text-gray-900 placeholder-gray-400 focus:border-purple-500" />
+            <input placeholder="Produto de interesse" value={formData.productInterest || ''} onChange={e => setFormData({...formData, productInterest: e.target.value})} className="w-full bg-white border border-gray-300 p-3 rounded-xl outline-none text-gray-900 placeholder-gray-400 focus:border-purple-500" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black text-gray-500 uppercase">Data de retorno</label>
-            <input type="date" value={formData.returnDate} onChange={e => setFormData({...formData, returnDate: e.target.value})} className="w-full bg-white border border-gray-300 p-3 rounded-xl outline-none text-gray-900 focus:border-purple-500" />
+            <input type="date" value={formData.returnDate || ''} onChange={e => setFormData({...formData, returnDate: e.target.value})} className="w-full bg-white border border-gray-300 p-3 rounded-xl outline-none text-gray-900 focus:border-purple-500" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black text-gray-500 uppercase">Valor Estimado (R$)</label>
             <input type="text" placeholder="R$ 0,00" value={displayValue} onChange={handleValueChange} className="w-full bg-white border border-gray-300 p-3 rounded-xl outline-none text-gray-900 placeholder-gray-400 focus:border-purple-500" />
           </div>
           <button type="submit" className="w-full py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20">
-            <Save size={18} /> Salvar Card
+            <Save size={18} /> Salvar Alterações
           </button>
         </form>
       </div>
@@ -82,4 +77,4 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ onCancel, onSubmit })
   );
 };
 
-export default OpportunityForm;
+export default OpportunityEditForm;
