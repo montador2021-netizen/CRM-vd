@@ -120,8 +120,7 @@ const App: React.FC = () => {
       user: { name: 'Admin', avatar: 'https://picsum.photos/seed/u1/40/40' },
       tags: []
     };
-    const docRef = await addDoc(collection(db, 'opportunities'), newOpp);
-    setOpportunities(prev => [...prev, { ...newOpp, id: docRef.id }]);
+    await addDoc(collection(db, 'opportunities'), newOpp);
     setIsAddingOpportunity(false);
   };
 
@@ -356,19 +355,7 @@ const App: React.FC = () => {
     setSavedSales(updatedSales);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
     
-    // 2. Salvar no Firestore
-    try {
-      await addDoc(collection(db, 'sales'), saleObj);
-      console.log("Sale saved to Firestore successfully");
-    } catch (error) {
-      console.error("Error saving sale to Firestore:", error);
-      // Se falhar no Firestore, salva em uma fila de pendentes para tentar depois
-      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
-      localStorage.setItem('pending_sales', JSON.stringify([...pending, saleObj]));
-      alert("Venda salva localmente (offline). Será sincronizada quando houver conexão.");
-    }
-    
-    // 3. Limpar formulário e redirecionar imediatamente
+    // 2. Limpar formulário e redirecionar imediatamente
     setActiveNav(NavItem.ResumoPedido);
 
     // 3. Tentar sincronizar se online (em segundo plano)
@@ -592,11 +579,10 @@ const App: React.FC = () => {
                           <select 
                             className="text-[10px] bg-purple-50 text-purple-700 font-bold rounded-lg px-2 py-1 outline-none border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
                             value={opp.stage}
-                            onChange={async (e) => {
+                            onChange={(e) => {
                               e.stopPropagation();
                               const newStage = e.target.value;
                               setOpportunities(opportunities.map(o => o.id === opp.id ? { ...o, stage: newStage } : o));
-                              await updateDoc(doc(db, 'opportunities', opp.id), { stage: newStage });
                             }}
                           >
                             {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -820,6 +806,21 @@ const App: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-black text-purple-600">{formatBRL(stats.bonusAcelerador)}</div>
+                </div>
+              </div>
+            )}
+            {stats.bonusGarantia > 0 && (
+              <div className="bg-white p-5 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 border border-emerald-100">
+                    <ShieldCheck size={18} className="text-emerald-600" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Bônus Garantia (Acelerador)</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-black text-emerald-600">{formatBRL(stats.bonusGarantia)}</div>
                 </div>
               </div>
             )}
