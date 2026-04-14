@@ -11,9 +11,7 @@ import OpportunityEditForm from './components/OpportunityEditForm';
 import { NavItem, Sale, Targets, WeeklyPerformance, DashboardStats, Customer, Opportunity } from './tipos';
 import { PIPELINE_STAGES, MOCK_OPPORTUNITIES } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
-import { db, auth } from './src/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs, setDoc, getDocFromServer } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { supabase } from './src/supabase';
 import { 
   Plus, 
   Wrench, 
@@ -120,13 +118,15 @@ const App: React.FC = () => {
       user: { name: 'Admin', avatar: 'https://picsum.photos/seed/u1/40/40' },
       tags: []
     };
-    await addDoc(collection(db, 'opportunities'), newOpp);
+    const { error } = await supabase.from('opportunities').insert([newOpp]);
+    if (error) console.error("Erro ao adicionar oportunidade:", error);
     setIsAddingOpportunity(false);
   };
 
   const saveOpportunity = async (updatedOpp: Opportunity) => {
     const { id, ...data } = updatedOpp;
-    await updateDoc(doc(db, 'opportunities', id), data);
+    const { error } = await supabase.from('opportunities').update(data).eq('id', id);
+    if (error) console.error("Erro ao atualizar oportunidade:", error);
     setEditingOpportunity(null);
   };
 
@@ -221,38 +221,22 @@ const App: React.FC = () => {
       setDeferredPrompt(null);
     });
     
-    // Carregar dados do Firestore
-    const unsubscribeSales = onSnapshot(collection(db, 'sales'), (snapshot) => {
-      const salesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Sale));
-      
-      // Mesclar com vendas pendentes locais para evitar que sumam
-      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
-      setSavedSales([...salesData, ...pending]);
-    });
+    // Carregar dados do Supabase
+    const loadData = async () => {
+      const { data: salesData } = await supabase.from('sales').select('*');
+      if (salesData) setSavedSales(salesData as Sale[]);
 
-    const unsubscribeTargets = onSnapshot(doc(db, 'settings', 'targets'), (doc) => {
-      if (doc.exists()) {
-        const remoteTargets = doc.data() as Targets;
-        setTargets(remoteTargets);
-        localStorage.setItem(TARGETS_KEY, JSON.stringify(remoteTargets));
-      }
-    });
+      const { data: targetsData } = await supabase.from('settings').select('*').eq('id', 'targets').single();
+      if (targetsData) setTargets(targetsData as Targets);
 
-    // Carregar metas do localStorage se disponível (offline first)
-    const localTargets = localStorage.getItem(TARGETS_KEY);
-    if (localTargets) {
-      setTargets(JSON.parse(localTargets));
-    }
+      const { data: customersData } = await supabase.from('customers').select('*');
+      if (customersData) setCustomers(customersData as Customer[]);
+    };
+    loadData();
 
-    const unsubscribeCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => {
-      const customersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Customer));
-      setCustomers(customersData);
-    });
-
-    const unsubscribeOpportunities = onSnapshot(collection(db, 'opportunities'), (snapshot) => {
-      const oppsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Opportunity));
-      setOpportunities(oppsData);
-    });
+    // Carregar oportunidades do Supabase
+    const { data: oppsData } = await supabase.from('opportunities').select('*');
+    if (oppsData) setOpportunities(oppsData as Opportunity[]);
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -349,7 +333,7 @@ const App: React.FC = () => {
       status: 'ativo'
     };
 
-    // 1. Salvar localmente IMEDIATAMENTE (isso garante que não suma)
+    // 1. Salvar localmente IMEDIATAMENTE
     const updatedSales = [saleObj, ...savedSales];
     setSavedSales(updatedSales);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
@@ -357,16 +341,14 @@ const App: React.FC = () => {
     // 2. Redirecionar imediatamente
     setActiveNav(NavItem.ResumoPedido);
 
-    // 3. Tentar sincronizar com Firebase em segundo plano (sem travar o app)
-    if (isOnline && db) {
-      try {
-        console.log("Tentando sincronizar com Firebase...");
-        await addDoc(collection(db, 'sales'), saleObj);
-        console.log("Sincronizado com sucesso!");
-      } catch (error) {
-        console.error("Erro ao sincronizar com Firebase (mas salvo localmente):", error);
-        // Não faz nada, o dado já está salvo localmente
-      }
+    // 3. Tentar sincronizar com Supabase em segundo plano
+    try {
+      console.log("Tentando sincronizar com Supabase...");
+      const { error } = await supabase.from('sales').insert([saleObj]);
+      if (error) throw error;
+      console.log("Sincronizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao sincronizar com Supabase:", error);
     }
   };
 
