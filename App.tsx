@@ -331,6 +331,7 @@ const App: React.FC = () => {
   };
 
   const saveSale = async (newSaleData: any) => {
+    alert("Iniciando salvamento...");
     console.log("saveSale called with:", newSaleData);
     const saleObj: Sale = {
       numeroPedido: newSaleData.pedido,
@@ -349,40 +350,32 @@ const App: React.FC = () => {
     };
     console.log("Created saleObj:", saleObj);
 
-    // 1. Salvar localmente imediatamente
-    const updatedSales = [saleObj, ...savedSales];
-    console.log("Updating savedSales state with:", updatedSales);
-    setSavedSales(updatedSales);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
-    
-    // 2. Limpar formulário e redirecionar imediatamente
-    setActiveNav(NavItem.ResumoPedido);
-
-    // 3. Tentar sincronizar se online (em segundo plano)
-    if (isOnline) {
-      try {
-        await addDoc(collection(db, 'sales'), saleObj);
-        // Atualizar estatísticas do cliente se vinculado
-        if (newSaleData.clienteId) {
-          const customerRef = doc(db, 'customers', newSaleData.clienteId);
-          const customer = customers.find(c => c.id === newSaleData.clienteId);
-          if (customer) {
-            await updateDoc(customerRef, {
-              totalComprado: (customer.totalComprado || 0) + newSaleData.total,
-              pedidosCount: (customer.pedidosCount || 0) + 1
-            });
-          }
+    try {
+      alert("Tentando conectar ao Firebase...");
+      // 1. Tentar salvar no Firebase primeiro
+      await addDoc(collection(db, 'sales'), saleObj);
+      alert("Sucesso! Salvo no Firebase.");
+      
+      // 2. Atualizar estatísticas do cliente se vinculado
+      if (newSaleData.clienteId) {
+        const customerRef = doc(db, 'customers', newSaleData.clienteId);
+        const customer = customers.find(c => c.id === newSaleData.clienteId);
+        if (customer) {
+          await updateDoc(customerRef, {
+            totalComprado: (customer.totalComprado || 0) + newSaleData.total,
+            pedidosCount: (customer.pedidosCount || 0) + 1
+          });
         }
-      } catch (error) {
-        console.error("Erro ao sincronizar venda:", error);
-        // Adicionar à fila de pendentes se falhar
-        const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
-        localStorage.setItem('pending_sales', JSON.stringify([...pending, saleObj]));
       }
-    } else {
-      // 3. Se offline, adicionar à fila de pendentes
-      const pending = JSON.parse(localStorage.getItem('pending_sales') || '[]');
-      localStorage.setItem('pending_sales', JSON.stringify([...pending, saleObj]));
+      
+      // 3. Atualizar estado local SOMENTE após sucesso no Firebase
+      setSavedSales(prev => [saleObj, ...prev]);
+      setActiveNav(NavItem.ResumoPedido);
+      
+    } catch (error) {
+      console.error("Erro ao salvar venda no Firebase:", error);
+      alert("ERRO: " + (error instanceof Error ? error.message : String(error)));
+      throw error; // Lança o erro para sabermos que falhou
     }
   };
 
