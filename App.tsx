@@ -28,7 +28,8 @@ import {
   BarChart,
   Phone,
   MessageCircle,
-  CheckSquare
+  CheckSquare,
+  Smartphone
 } from 'lucide-react';
 
 import { 
@@ -97,19 +98,35 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const isAdmin = user?.firstName === 'Valmir' && user?.lastName === 'Melo';
 
-  // Teste de conexão com o Firebase
-  useEffect(() => {
-    async function testConnection() {
-      try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
-      } catch (error) {
-        if(error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Erro de conexão Firebase: O cliente está offline.");
+    // Teste de conexão com o Supabase
+    useEffect(() => {
+      async function testConnection() {
+        try {
+          console.log("Enviando pedido de simulação #9999...");
+          const testSale = {
+            numeroPedido: "9999",
+            vendedorId: "simulacao",
+            clienteId: null,
+            valorProduto: 1234.56,
+            valorAssistencia: 0,
+            valorImpermeabilizacao: 0,
+            total: 1234.56,
+            bonusTotal: 123.45,
+            comissaoProduto: 27.16,
+            data: new Date().toLocaleDateString('pt-BR'),
+            timestamp: Date.now(),
+            status: 'ativo'
+          };
+          
+          const { error } = await supabase.from('sales').insert([testSale]);
+          if (error) throw error;
+          console.log("Pedido #9999 enviado com sucesso!");
+        } catch (error) {
+          console.error("Erro no teste de simulação:", error);
         }
       }
-    }
-    testConnection();
-  }, []);
+      testConnection();
+    }, []);
 
   const addOpportunity = async (oppData: Omit<Opportunity, 'id' | 'daysAgo' | 'user' | 'tags'>) => {
     const newOpp = {
@@ -135,45 +152,22 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    let unsubscribe = () => {};
     // Check localStorage first
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
-      setLoading(false);
     } else {
-      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        if (firebaseUser) {
-          // Se o usuário estiver autenticado, restauramos o estado do usuário
-          const storedUser = localStorage.getItem('currentUser');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-          } else {
-            // Fallback para usuário autenticado se não houver nada no localStorage
-            setUser({
-              id: firebaseUser.uid,
-              firstName: firebaseUser.displayName || 'Usuário',
-              lastName: '',
-              store: 'Geral',
-              password: '',
-              role: (firebaseUser.email === 'montador2021@gmail.com') ? 'admin' : 'vendedor'
-            });
-          }
-        } else {
-          // Usuário padrão se não logado
-          setUser({
-            id: 'anon-default',
-            firstName: 'Visitante',
-            lastName: '',
-            store: 'Loja 1',
-            password: '',
-            role: 'vendedor'
-          });
-        }
-        setLoading(false);
+      // Usuário padrão se não logado
+      setUser({
+        id: 'anon-default',
+        firstName: 'Visitante',
+        lastName: '',
+        store: 'Loja 1',
+        password: '',
+        role: 'vendedor'
       });
     }
-    return () => unsubscribe();
+    setLoading(false);
   }, []);
   
   // Monitorar conexão e PWA
@@ -185,21 +179,20 @@ const App: React.FC = () => {
       if (pending.length > 0) {
         for (const sale of pending) {
           try {
-            await addDoc(collection(db, 'sales'), sale);
+            const { error } = await supabase.from('sales').insert([sale]);
+            if (error) throw error;
             // Atualizar estatísticas do cliente se vinculado
             if (sale.clienteId) {
-              const customerRef = doc(db, 'customers', sale.clienteId);
               const customer = customers.find(c => c.id === sale.clienteId);
               if (customer) {
-                await updateDoc(customerRef, {
+                await supabase.from('customers').update({
                   totalComprado: (customer.totalComprado || 0) + sale.total,
                   pedidosCount: (customer.pedidosCount || 0) + 1
-                });
+                }).eq('id', sale.clienteId);
               }
             }
           } catch (error) {
             console.error("Erro ao sincronizar venda pendente:", error);
-            // Se falhar, manter na fila (ou tratar de outra forma)
             continue;
           }
         }
@@ -221,30 +214,47 @@ const App: React.FC = () => {
       setDeferredPrompt(null);
     });
     
-    // Carregar dados do Supabase
+    // Carregar dados do Supabase com mais robustez
     const loadData = async () => {
-      const { data: salesData } = await supabase.from('sales').select('*');
-      if (salesData) setSavedSales(salesData as Sale[]);
+      if (!supabase) return;
+      
+      console.log("Buscando dados no Supabase...");
+      try {
+        const { data: salesData, error: salesError } = await supabase.from('sales').select('*');
+        if (salesError) throw salesError;
+        
+        console.log("Vendas carregadas:", salesData);
+        if (salesData) setSavedSales(salesData as Sale[]);
+      } catch (err) {
+        console.error("Erro ao buscar vendas:", err);
+      }
 
-      const { data: targetsData } = await supabase.from('settings').select('*').eq('id', 'targets').single();
-      if (targetsData) setTargets(targetsData as Targets);
+      try {
+        const { data: targetsData } = await supabase.from('settings').select('*').eq('id', 'targets').single();
+        if (targetsData) setTargets(targetsData as Targets);
+      } catch (err) {
+        console.error("Erro ao buscar metas:", err);
+      }
 
-      const { data: customersData } = await supabase.from('customers').select('*');
-      if (customersData) setCustomers(customersData as Customer[]);
+      try {
+        const { data: customersData } = await supabase.from('customers').select('*');
+        if (customersData) setCustomers(customersData as Customer[]);
+      } catch (err) {
+        console.error("Erro ao buscar clientes:", err);
+      }
+      
+      try {
+        const { data: oppsData } = await supabase.from('opportunities').select('*');
+        if (oppsData) setOpportunities(oppsData as Opportunity[]);
+      } catch (err) {
+        console.error("Erro ao buscar oportunidades:", err);
+      }
     };
     loadData();
-
-    // Carregar oportunidades do Supabase
-    const { data: oppsData } = await supabase.from('opportunities').select('*');
-    if (oppsData) setOpportunities(oppsData as Opportunity[]);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', () => setIsOnline(false));
-      unsubscribeSales();
-      unsubscribeTargets();
-      unsubscribeCustomers();
-      unsubscribeOpportunities();
     };
   }, [customers]);
 
@@ -256,8 +266,9 @@ const App: React.FC = () => {
   const saveTargets = async (newTargets: Targets) => {
     try {
       console.log("Saving targets:", newTargets);
-      // Salva no Firebase (Online)
-      await setDoc(doc(db, 'settings', 'targets'), newTargets);
+      // Salva no Supabase (Online)
+      const { error } = await supabase.from('settings').upsert({ id: 'targets', ...newTargets });
+      if (error) throw error;
       // Salva no localStorage (Offline)
       localStorage.setItem(TARGETS_KEY, JSON.stringify(newTargets));
       
@@ -296,7 +307,8 @@ const App: React.FC = () => {
     }
 
     try {
-      await updateDoc(doc(db, 'sales', sale.id), { status: 'cancelado' });
+      const { error } = await supabase.from('sales').update({ status: 'cancelado' }).eq('id', sale.id);
+      if (error) throw error;
       // Atualizar estado local
       setSavedSales(prev => prev.map(s => s.id === sale.id ? { ...s, status: 'cancelado' } : s));
       // Atualizar localStorage
@@ -419,16 +431,19 @@ const App: React.FC = () => {
       totalComprado: 0,
       pedidosCount: 0
     };
-    await addDoc(collection(db, 'customers'), newCustomer);
+    const { error } = await supabase.from('customers').insert([newCustomer]);
+    if (error) console.error("Erro ao adicionar cliente:", error);
   };
 
   const deleteCustomer = async (id: string) => {
-    await deleteDoc(doc(db, 'customers', id));
+    const { error } = await supabase.from('customers').delete().eq('id', id);
+    if (error) console.error("Erro ao deletar cliente:", error);
   };
 
   const updateCustomer = async (updated: Customer) => {
     const { id, ...data } = updated;
-    await updateDoc(doc(db, 'customers', id), data);
+    const { error } = await supabase.from('customers').update(data).eq('id', id);
+    if (error) console.error("Erro ao atualizar cliente:", error);
   };
 
   const renderContent = () => {
@@ -455,6 +470,16 @@ const App: React.FC = () => {
             </div>
             <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none">Conquista <span className="text-purple-600">App</span></h1>
             <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.5em]">Ecossistema de Alta Performance</p>
+          </div>
+
+          <div className="bg-pink-500 p-6 rounded-3xl text-white shadow-lg mb-6 flex items-center gap-4">
+            <div className="bg-white/20 p-3 rounded-2xl">
+              <Smartphone size={24} />
+            </div>
+            <div>
+              <h3 className="font-black text-lg">Teste de Conexão</h3>
+              <p className="text-sm opacity-90">Pedidos carregados do Supabase: {savedSales.length}</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
@@ -1005,8 +1030,11 @@ const App: React.FC = () => {
                     </button>
                     <button 
                       onClick={async () => {
-                        const saleRef = doc(db, 'sales', sale.id!);
-                        await updateDoc(saleRef, { statusRetorno: 'finalizado' });
+                        const handleFinalizeRetorno = async () => {
+                          const { error } = await supabase.from('sales').update({ statusRetorno: 'finalizado' }).eq('id', sale.id);
+                          if (error) console.error("Erro ao finalizar retorno:", error);
+                        };
+                        handleFinalizeRetorno();
                       }}
                       className="bg-emerald-50 text-emerald-600 p-2 rounded-lg"
                     >
