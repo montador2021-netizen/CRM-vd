@@ -331,8 +331,8 @@ const App: React.FC = () => {
   };
 
   const saveSale = async (newSaleData: any) => {
-    alert("Iniciando salvamento...");
-    console.log("saveSale called with:", newSaleData);
+    console.log("Iniciando salvamento offline-first...");
+    
     const saleObj: Sale = {
       numeroPedido: newSaleData.pedido,
       vendedorId: user?.id || 'unknown',
@@ -348,34 +348,25 @@ const App: React.FC = () => {
       timestamp: Date.now(),
       status: 'ativo'
     };
-    console.log("Created saleObj:", saleObj);
 
-    try {
-      alert("Tentando conectar ao Firebase...");
-      // 1. Tentar salvar no Firebase primeiro
-      await addDoc(collection(db, 'sales'), saleObj);
-      alert("Sucesso! Salvo no Firebase.");
-      
-      // 2. Atualizar estatísticas do cliente se vinculado
-      if (newSaleData.clienteId) {
-        const customerRef = doc(db, 'customers', newSaleData.clienteId);
-        const customer = customers.find(c => c.id === newSaleData.clienteId);
-        if (customer) {
-          await updateDoc(customerRef, {
-            totalComprado: (customer.totalComprado || 0) + newSaleData.total,
-            pedidosCount: (customer.pedidosCount || 0) + 1
-          });
-        }
+    // 1. Salvar localmente IMEDIATAMENTE (isso garante que não suma)
+    const updatedSales = [saleObj, ...savedSales];
+    setSavedSales(updatedSales);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
+    
+    // 2. Redirecionar imediatamente
+    setActiveNav(NavItem.ResumoPedido);
+
+    // 3. Tentar sincronizar com Firebase em segundo plano (sem travar o app)
+    if (isOnline && db) {
+      try {
+        console.log("Tentando sincronizar com Firebase...");
+        await addDoc(collection(db, 'sales'), saleObj);
+        console.log("Sincronizado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao sincronizar com Firebase (mas salvo localmente):", error);
+        // Não faz nada, o dado já está salvo localmente
       }
-      
-      // 3. Atualizar estado local SOMENTE após sucesso no Firebase
-      setSavedSales(prev => [saleObj, ...prev]);
-      setActiveNav(NavItem.ResumoPedido);
-      
-    } catch (error) {
-      console.error("Erro ao salvar venda no Firebase:", error);
-      alert("ERRO: " + (error instanceof Error ? error.message : String(error)));
-      throw error; // Lança o erro para sabermos que falhou
     }
   };
 

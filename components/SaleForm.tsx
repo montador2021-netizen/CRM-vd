@@ -104,7 +104,6 @@ const SaleForm: React.FC<SaleFormProps> = ({ onCancel, onSubmit, customers, targ
 
           <form className="space-y-8" onSubmit={(e) => {
             e.preventDefault();
-            console.log("Form submitted");
             onSubmit({ 
               pedido, 
               clienteId,
